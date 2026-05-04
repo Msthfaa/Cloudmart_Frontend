@@ -1,9 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50/50">
-    <Sidebar />
-    <Navbar />
-
-    <main class="ml-10 pt-10 p-2">
+  <div>
       <div class="mb-8">
         <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Ringkasan Toko</h2>
         <p class="text-blue-600/70 font-medium">Pantau performa toko Cloudmart kamu hari ini.</p>
@@ -55,14 +51,11 @@
           </div>
         </div>
       </div>
-    </main>
   </div>
 </template>
 
 <script setup>
-import Sidebar from '../../components/Sidebar.vue';
-import Navbar from '../../components/Navbar.vue';
-import Swal from 'sweetalert2'; // Import SweetAlert
+import Swal from 'sweetalert2';
 
 const stats = [
   { label: 'Total Penjualan', value: 'Rp 45.000.000', icon: '💰' },

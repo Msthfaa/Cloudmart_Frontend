@@ -2,8 +2,7 @@
   <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50/50">
     <Sidebar />
     <Navbar />
-
-    <main class="ml-64 pt-24 p-8 transition-all duration-500">
+    <main class="ml-64 pt-20 p-8 transition-all duration-500">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -14,8 +13,8 @@
 </template>
 
 <script setup>
-import Sidebar from './components/admin/Sidebar.vue'
-import Navbar from './components/admin/Navbar.vue'
+import Sidebar from '../components/admin/Sidebar.vue'
+import Navbar from '../components/admin/Navbar.vue'
 </script>
 
 <style>

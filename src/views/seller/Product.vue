@@ -113,7 +113,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
-import DataTable from '../../components/DataTable.vue';
+import DataTable from '../../components/admin/DataTable.vue';
 import Swal from 'sweetalert2';
 
 const products = ref([]);

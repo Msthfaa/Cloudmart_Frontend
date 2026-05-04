@@ -64,7 +64,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import DataTable from '../../components/DataTable.vue';
+import DataTable from '../../components/admin/DataTable.vue';
 import Swal from 'sweetalert2';
 
 const activeTab = ref('Semua Pesanan');
