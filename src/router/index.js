@@ -12,6 +12,7 @@ import CheckoutView from '../views/buyer/CheckoutView.vue';
 import PaymentSuccess from '../views/buyer/PaymentSuccess.vue';
 import CartView from '../views/buyer/CartView.vue';
 import OrdersView from '../views/buyer/OrdersView.vue';
+import ProfileView from '../views/buyer/ProfileView.vue';
 
 // ===================== AUTH VIEWS =====================
 import LoginView from '../views/auth/Login.vue';
@@ -24,6 +25,11 @@ import ProductsView from '../views/seller/Product.vue';
 import OrderView from '../views/seller/Order.vue';
 import TokoView from '../views/seller/SettingToko.vue';
 import AddProduct from '../views/seller/AddProduct.vue';
+import CategoriesView from '../views/seller/Categories.vue';
+import VariantsView from '../views/seller/Variants.vue';
+import VouchersView from '../views/seller/Vouchers.vue';
+import LogisticsView from '../views/seller/Logistics.vue';
+import PaymentConfigsView from '../views/seller/PaymentConfigs.vue';
 
 const routes = [
   // ── AREA PUBLIC (Buyer / Toko Depan) ──────────────────────────
@@ -37,6 +43,7 @@ const routes = [
       { path: 'payment-success', name: 'PaymentSuccess', component: PaymentSuccess },
       { path: 'cart',            name: 'Cart',           component: CartView,       meta: { requiresBuyer: true } },
       { path: 'orders',          name: 'Orders',         component: OrdersView,     meta: { requiresBuyer: true } },
+      { path: 'profile',         name: 'Profile',        component: ProfileView,    meta: { requiresBuyer: true } },
     ],
   },
 
@@ -59,8 +66,13 @@ const routes = [
       { path: 'dashboard',    name: 'AdminDashboard', component: DashboardView },
       { path: 'products',     name: 'AdminProducts',  component: ProductsView },
       { path: 'products/add', name: 'AddProduct',     component: AddProduct },
+      { path: 'products/:id/variants', name: 'AdminVariants', component: VariantsView },
       { path: 'orders',       name: 'AdminOrders',    component: OrderView },
       { path: 'setting',      name: 'settingToko',    component: TokoView },
+      { path: 'categories',   name: 'AdminCategories', component: CategoriesView },
+      { path: 'vouchers',     name: 'AdminVouchers',  component: VouchersView },
+      { path: 'logistics',    name: 'AdminLogistics', component: LogisticsView },
+      { path: 'payment-configs', name: 'AdminPaymentConfigs', component: PaymentConfigsView },
     ],
   },
 ];

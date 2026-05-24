@@ -55,19 +55,50 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue';
 import Swal from 'sweetalert2';
+import { sellerDashboardService } from '../../services/sellerDashboard';
+import { sellerOrdersService } from '../../services/sellerOrders';
 
-const stats = [
-  { label: 'Total Penjualan', value: 'Rp 45.000.000', icon: '💰' },
-  { label: 'Total Pesanan', value: '3.456', icon: '🛒' },
-  { label: 'Pengunjung Aktif', value: '8.976', icon: '👤' },
-];
+const stats = ref([
+  { label: 'Total Penjualan', value: 'Rp 0', icon: '💰' },
+  { label: 'Total Pesanan', value: '0', icon: '🛒' },
+  { label: 'Total Produk', value: '0', icon: '📦' },
+]);
 
-const recentOrders = [
-  { id: 1, buyer: 'Mark Lee', total: 'Rp 2.5jt', status: 'Dikirim' },
-  { id: 2, buyer: 'Mingyu', total: 'Rp 2.0jt', status: 'Tertunda' },
-  { id: 3, buyer: 'Ning Yizhuo', total: 'Rp 4.7jt', status: 'Dikirim' },
-];
+const recentOrders = ref([]);
+
+const fetchData = async () => {
+  try {
+    const summary = await sellerDashboardService.getSummary();
+    stats.value = [
+      { label: 'Total Penjualan', value: 'Rp ' + Number(summary.total_revenue).toLocaleString('id-ID'), icon: '💰' },
+      { label: 'Total Pesanan', value: summary.total_orders, icon: '🛒' },
+      { label: 'Total Produk', value: summary.total_products, icon: '📦' },
+    ];
+    
+    // Fetch orders for the recent list
+    const orders = await sellerOrdersService.getOrders();
+    // Sort desc (newest first), take top 3
+    const sorted = orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 3);
+    
+    recentOrders.value = sorted.map(o => ({
+      id: o.id,
+      buyer: `User ${o.user_id}`,
+      total: 'Rp ' + Number(o.grand_total).toLocaleString('id-ID'),
+      status: o.payment_status === 'settlement' || o.payment_status === 'paid' ? 'Dibayar' : 'Menunggu',
+      icon: '🛒'
+    }));
+  } catch (error) {
+    console.error("Gagal memuat dashboard:", error);
+  }
+};
+
+onMounted(() => {
+  fetchData();
+});
+
+
 
 const showAlert = () => {
   Swal.fire({

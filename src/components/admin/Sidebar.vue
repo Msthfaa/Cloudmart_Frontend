@@ -5,32 +5,68 @@
         <span class="text-2xl font-black tracking-tighter italic">CLOUDMART</span>
       </div>
       
-      <nav class="space-y-3">
+      <nav class="space-y-2 overflow-y-auto h-[calc(100vh-14rem)] pr-2 custom-scrollbar">
         <router-link 
           to="/admin/dashboard" 
-          class="flex items-center space-x-3 p-4 rounded-2xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
-          exact-active-class="bg-blue-600 text-white shadow-lg shadow-blue-200 font-bold"
+          class="flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
+          exact-active-class="bg-blue-600 text-white shadow-md shadow-blue-200 font-bold"
         >
-          <span class="text-xl">📊</span> 
-          <span>Dashboard</span>
+          <span class="text-lg">📊</span> 
+          <span class="text-sm">Dashboard</span>
+        </router-link>
+
+        <router-link 
+          to="/admin/categories" 
+          class="flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
+          exact-active-class="bg-blue-600 text-white shadow-md shadow-blue-200 font-bold"
+        >
+          <span class="text-lg">🗂️</span> 
+          <span class="text-sm">Kategori</span>
         </router-link>
 
         <router-link 
           to="/admin/products" 
-          class="flex items-center space-x-3 p-4 rounded-2xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
-          exact-active-class="bg-blue-600 text-white shadow-lg shadow-blue-200 font-bold"
+          class="flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
+          active-class="bg-blue-600 text-white shadow-md shadow-blue-200 font-bold"
         >
-          <span class="text-xl">📦</span> 
-          <span>Produk</span>
+          <span class="text-lg">📦</span> 
+          <span class="text-sm">Produk</span>
         </router-link>
 
         <router-link 
           to="/admin/orders" 
-          class="flex items-center space-x-3 p-4 rounded-2xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
-          exact-active-class="bg-blue-600 text-white shadow-lg shadow-blue-200 font-bold"
+          class="flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
+          exact-active-class="bg-blue-600 text-white shadow-md shadow-blue-200 font-bold"
         >
-          <span class="text-xl">🛒</span> 
-          <span>Pesanan</span>
+          <span class="text-lg">🛒</span> 
+          <span class="text-sm">Pesanan</span>
+        </router-link>
+
+        <router-link 
+          to="/admin/vouchers" 
+          class="flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
+          exact-active-class="bg-blue-600 text-white shadow-md shadow-blue-200 font-bold"
+        >
+          <span class="text-lg">🎫</span> 
+          <span class="text-sm">Voucher</span>
+        </router-link>
+
+        <router-link 
+          to="/admin/logistics" 
+          class="flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
+          exact-active-class="bg-blue-600 text-white shadow-md shadow-blue-200 font-bold"
+        >
+          <span class="text-lg">🚚</span> 
+          <span class="text-sm">Logistik</span>
+        </router-link>
+
+        <router-link 
+          to="/admin/payment-configs" 
+          class="flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
+          exact-active-class="bg-blue-600 text-white shadow-md shadow-blue-200 font-bold"
+        >
+          <span class="text-lg">💳</span> 
+          <span class="text-sm">Pembayaran</span>
         </router-link>
       </nav>
     </div>

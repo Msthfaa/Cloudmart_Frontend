@@ -27,10 +27,12 @@
             {{ userInitials }}
           </div>
           
-          <div class="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-blue-50 p-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all translate-y-2 group-hover:translate-y-0">
-            <button @click="handleLogout" class="w-full text-left px-4 py-2 text-xs font-black text-red-500 hover:bg-red-50 rounded-xl transition-colors uppercase">
-              🚪 Keluar Akun
-            </button>
+          <div class="absolute right-0 top-full pt-2 w-48 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all translate-y-2 group-hover:translate-y-0">
+            <div class="bg-white rounded-2xl shadow-xl border border-blue-50 p-2">
+              <button @click="handleLogout" class="w-full text-left px-4 py-2 text-xs font-black text-red-500 hover:bg-red-50 rounded-xl transition-colors uppercase">
+                🚪 Keluar Akun
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -41,7 +43,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import { authService } from '../../services/auth';
 
 const route = useRoute();
 const router = useRouter();
@@ -71,26 +73,23 @@ const userInitials = computed(() => {
 
 const fetchUserProfile = async () => {
   try {
-    // Tembak endpoint profil (Pastikan di NestJS ada endpoint GET /auth/profile)
-    const response = await axios.get('http://localhost:3000/api/v1/auth/profile', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
-    
-    // Sesuaikan dengan data yang dikirim NestJS + Prisma
+    const profileData = await authService.getProfile();
     user.value = {
-      name: response.data.name,
-      storeName: response.data.store?.name // Mengambil relasi Store dari Prisma
+      name: profileData.name,
+      // Jika data store/merchant tidak ada di profileData, default ke nama
+      storeName: profileData.store?.name || profileData.name + ' Store'
     };
   } catch (error) {
     console.error("Gagal ambil profil:", error);
-    // Jika token mati, opsional lempar ke login
-    // router.push('/login');
+    // Token mungkin invalid
+    authService.logout();
+    router.push('/admin/login');
   }
 };
 
 const handleLogout = () => {
-  localStorage.removeItem('token');
-  router.push('/login');
+  authService.logout();
+  router.push('/admin/login');
 };
 
 onMounted(fetchUserProfile);

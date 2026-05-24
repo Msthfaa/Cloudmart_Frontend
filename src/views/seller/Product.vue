@@ -75,16 +75,16 @@
             </div>
             <div>
               <p class="font-black text-slate-800 text-sm uppercase leading-tight">{{ p.name }}</p>
-              <p class="text-[10px] font-bold text-slate-400 italic">ID: {{ p.id.substring(0, 8) }}...</p>
+              <p class="text-[10px] font-bold text-slate-400 italic">ID: {{ p.id }}</p>
             </div>
           </div>
         </td>
         <td class="px-8 py-5">
-          <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">{{ p.brand?.name || 'No Brand' }}</p>
+          <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">CLOUDMARTER</p>
           <p class="text-xs font-bold text-slate-500 mt-1">{{ p.category?.name || 'Uncategorized' }}</p>
         </td>
         <td class="px-8 py-5">
-          <p class="text-sm font-black text-slate-800">Rp {{ Number(p.basePrice).toLocaleString('id-ID') }}</p>
+          <p class="text-sm font-black text-slate-800">Rp {{ Number(p.variants?.length ? p.variants[0].price : 0).toLocaleString('id-ID') }}</p>
         </td>
         <td class="px-8 py-5">
           <div class="flex items-center space-x-2">
@@ -95,8 +95,8 @@
           </div>
         </td>
         <td class="px-8 py-5">
-          <span :class="getStatusStyles(p.status)" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
-            {{ p.status }}
+          <span :class="getStatusStyles('ACTIVE')" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
+            ACTIVE
           </span>
         </td>
         <td class="px-8 py-5 text-center">
@@ -112,7 +112,8 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
+import { sellerFeaturesService } from '../../services/sellerFeatures';
+import { showToastSuccess, showToastError } from '../../services/api';
 import DataTable from '../../components/admin/DataTable.vue';
 import Swal from 'sweetalert2';
 
@@ -124,31 +125,21 @@ const pagination = ref({
   perPage: 10
 });
 
-// Logic Fetch Data dari API NestJS
+// Logic Fetch Data dari API
 const fetchProducts = async () => {
   loading.value = true;
   try {
-    const response = await axios.get('http://localhost:3000/api/v1/products', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
-    // Jika datanya dibungkus pagination dari backend, sesuaikan (misal response.data.data)
-    products.value = response.data;
+    products.value = await sellerFeaturesService.getProducts();
   } catch (error) {
     console.error("Fetch error:", error);
-    // Notifikasi error tetap senada
-    Swal.fire({
-      icon: 'error',
-      title: 'Koneksi Terputus',
-      text: 'Gagal mengambil data dari database Cloudmart.',
-      confirmButtonColor: '#ef4444'
-    });
+    showToastError('Gagal mengambil katalog produk');
   } finally {
     loading.value = false;
   }
 };
 
 // Computed Stats
-const activeCount = computed(() => products.value.filter(p => p.status === 'ACTIVE').length);
+const activeCount = computed(() => products.value.length);
 const lowStockCount = computed(() => {
   return products.value.filter(p => getTotalStock(p) < 10 && getTotalStock(p) > 0).length;
 });
@@ -191,13 +182,11 @@ const handleDelete = async (id) => {
 
   if (result.isConfirmed) {
     try {
-      await axios.delete(`http://localhost:3000/api/v1/products/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await sellerFeaturesService.deleteProduct(id);
       Swal.fire('Terhapus!', 'Produk telah dihilangkan dari sistem.', 'success');
       fetchProducts(); // Refresh list
     } catch (err) {
-      Swal.fire('Gagal!', 'Produk tidak bisa dihapus.', 'error');
+      Swal.fire('Gagal!', err.message || 'Produk tidak bisa dihapus.', 'error');
     }
   }
 };

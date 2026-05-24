@@ -55,7 +55,7 @@
           </span>
         </td>
         <td class="px-6 py-4 text-center">
-          <button @click="viewDetail(order.orderId)" class="text-slate-400 hover:text-blue-600 font-black">⋮</button>
+          <button @click="viewDetail(order)" class="text-slate-400 hover:text-blue-600 font-black">⋮</button>
         </td>
       </tr>
     </DataTable>
@@ -63,25 +63,53 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { sellerOrdersService } from '../../services/sellerOrders';
+import { showToastError } from '../../services/api';
 import DataTable from '../../components/admin/DataTable.vue';
 import Swal from 'sweetalert2';
 
 const activeTab = ref('Semua Pesanan');
+const ordersData = ref([]);
+const loading = ref(true);
 
-const summary = [
-  { label: 'Total Pesanan', value: '1.284', icon: '💼' },
-  { label: 'Menunggu Pengiriman', value: '42', icon: '⏰' },
-  { label: 'Dalam Perjalanan', value: '156', icon: '🚚' },
-  { label: 'Pendapatan (Bln Ini)', value: 'Rp 99,5 jt', icon: '💳' }
-];
+const fetchOrders = async () => {
+  loading.value = true;
+  try {
+    ordersData.value = await sellerOrdersService.getOrders();
+  } catch (error) {
+    showToastError('Gagal memuat pesanan');
+  } finally {
+    loading.value = false;
+  }
+};
 
-const orders = [
-  { orderId: '#ORD-2025-8976', date: '1 Jan', time: '14.20', customer: 'Mark Lee', total: 'Rp 2.500.000', paymentStatus: 'Dibayar', fulfillment: 'Diproses' },
-  { orderId: '#ORD-2025-8977', date: '16 Okt', time: '14.20', customer: 'Jay', total: 'Rp 2.700.000', paymentStatus: 'Dibayar', fulfillment: 'Menunggu' },
-  { orderId: '#ORD-2025-8978', date: '13 Mei', time: '14.20', customer: 'Jaehyun', total: 'Rp 8.000.000', paymentStatus: 'Dibayar', fulfillment: 'Terkirim' },
-  { orderId: '#ORD-2025-8979', date: '15 Jan', time: '14.20', customer: 'Mingyu', total: 'Rp 1.800.000', paymentStatus: 'Gagal', fulfillment: 'Dibatalkan' },
-];
+const orders = computed(() => {
+  let filtered = ordersData.value;
+  // TODO: filter by activeTab if needed, though status might be pending/processing/etc.
+  return filtered.map(o => {
+    const d = new Date(o.created_at);
+    return {
+      id: o.id,
+      orderId: `#ORD-${o.id}`,
+      date: d.toLocaleDateString('id-ID'),
+      time: d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+      customer: `User ID: ${o.user_id}`,
+      total: 'Rp ' + Number(o.grand_total).toLocaleString('id-ID'),
+      paymentStatus: o.payment_status === 'settlement' || o.payment_status === 'paid' ? 'Dibayar' : 'Menunggu',
+      fulfillment: o.payment_status || 'Menunggu'
+    };
+  });
+});
+
+const summary = computed(() => [
+  { label: 'Total Pesanan', value: ordersData.value.length, icon: '💼' },
+  { label: 'Menunggu Pengiriman', value: ordersData.value.filter(o => o.payment_status === 'paid' || o.payment_status === 'settlement').length, icon: '⏰' },
+  { label: 'Dalam Perjalanan', value: ordersData.value.filter(o => o.payment_status === 'shipped').length, icon: '🚚' },
+  { label: 'Pendapatan', value: 'Lihat Dashboard', icon: '💳' }
+]);
+
+
 
 const getStatusClass = (status) => {
   switch (status) {
@@ -93,12 +121,16 @@ const getStatusClass = (status) => {
   }
 };
 
-const viewDetail = (id) => {
+const viewDetail = (order) => {
   Swal.fire({
-    title: `Detail Pesanan ${id}`,
-    html: `<div class="text-left text-sm">Customer: Mark Lee <br> Item: Adidas Adizero <br> Alamat: Surabaya, Indonesia</div>`,
+    title: `Detail Pesanan ${order.orderId}`,
+    html: `<div class="text-left text-sm">Customer: ${order.customer} <br> Total: ${order.total} <br> Pembayaran: ${order.paymentStatus}</div>`,
     icon: 'info',
     confirmButtonColor: '#2563eb'
   });
 };
+
+onMounted(() => {
+  fetchOrders();
+});
 </script>

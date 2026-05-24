@@ -25,34 +25,14 @@
               <input v-model="form.name" @input="updateAllSKU" type="text" class="input-style" placeholder="Contoh: Adidas Adizero Evo SL" required>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <label class="label-style">Kategori Koleksi</label>
-                <div class="relative">
-                  <select v-model="form.categoryId" @change="updateAllSKU" class="input-style appearance-none pr-10 cursor-pointer" required>
-                    <option value="" disabled selected>Pilih Kategori</option>
-                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-                  </select>
-                  <div class="absolute right-4 top-5 pointer-events-none text-blue-400">▼</div>
-                </div>
-              </div>
-              <div>
-                <label class="label-style">Brand / Merk</label>
-                <div class="relative">
-                  <select v-model="form.brandId" @change="updateAllSKU" class="input-style appearance-none pr-10 cursor-pointer" required>
-                    <option value="" disabled selected>Pilih Brand</option>
-                    <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}</option>
-                  </select>
-                  <div class="absolute right-4 top-5 pointer-events-none text-blue-400">▼</div>
-                </div>
-              </div>
-            </div>
-
             <div>
-              <label class="label-style">Harga Dasar (Base Price)</label>
-              <div class="relative group">
-                <span class="absolute left-5 top-4 font-black text-blue-300 transition-colors group-focus-within:text-blue-600">Rp</span>
-                <input v-model.number="form.basePrice" type="number" class="input-style pl-14" placeholder="0" required>
+              <label class="label-style">Kategori Koleksi</label>
+              <div class="relative">
+                <select v-model="form.categoryId" @change="updateAllSKU" class="input-style appearance-none pr-10 cursor-pointer" required>
+                  <option value="" disabled selected>Pilih Kategori</option>
+                  <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                </select>
+                <div class="absolute right-4 top-5 pointer-events-none text-blue-400">▼</div>
               </div>
             </div>
 
@@ -84,15 +64,19 @@
 
               <div class="w-24">
                 <label class="text-[9px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Warna</label>
-                <input v-model="v.color" @input="generateSKU(v)" type="text" placeholder="Ex: White" class="w-full bg-slate-50 border-0 p-4 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-blue-100">
+                <input v-model="v.color" @input="generateSKU(v)" type="text" placeholder="Ex: White" class="w-full bg-slate-50 border-0 p-4 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-blue-100" required>
               </div>
               <div class="w-24">
                 <label class="text-[9px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Ukuran</label>
-                <input v-model="v.size" @input="generateSKU(v)" type="text" placeholder="Ex: 42" class="w-full bg-slate-50 border-0 p-4 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-blue-100">
+                <input v-model="v.size" @input="generateSKU(v)" type="text" placeholder="Ex: 42" class="w-full bg-slate-50 border-0 p-4 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-blue-100" required>
+              </div>
+              <div class="w-24">
+                <label class="text-[9px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Harga</label>
+                <input v-model.number="v.price" type="number" placeholder="0" class="w-full bg-slate-50 border-0 p-4 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-blue-100" required>
               </div>
               <div class="w-24">
                 <label class="text-[9px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Stok</label>
-                <input v-model.number="v.stock" type="number" placeholder="0" class="w-full bg-slate-50 border-0 p-4 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-blue-100">
+                <input v-model.number="v.stock" type="number" placeholder="0" class="w-full bg-slate-50 border-0 p-4 rounded-2xl text-xs font-bold outline-none focus:ring-2 ring-blue-100" required>
               </div>
 
               <button v-if="form.variants.length > 1" @click="removeVariant(index)" type="button" class="p-4 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all mb-0.5">
@@ -129,47 +113,38 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import { sellerFeaturesService } from '../../services/sellerFeatures';
 import Swal from 'sweetalert2';
 
 const router = useRouter();
 const submitting = ref(false);
 const categories = ref([]);
-const brands = ref([]);
 
-// Form Data sesuai skema Prisma
+// Form Data sesuai skema backend
 const form = ref({
   name: '',
   description: '',
-  basePrice: 0,
   categoryId: '',
-  brandId: '',
   variants: [
-    { sku: '', color: '', size: '', stock: 0, additionalPrice: 0 }
+    { sku: '', color: '', size: '', price: 0, stock: 0 }
   ]
 });
 
-// 1. Fetch data Categories & Brands untuk Dropdown
+// 1. Fetch data Categories
 const fetchInitialData = async () => {
   try {
-    const [catRes, brandRes] = await Promise.all([
-      axios.get('http://localhost:3000/api/v1/categories'),
-      axios.get('http://localhost:3000/api/v1/brands')
-    ]);
-    categories.value = catRes.data;
-    brands.value = brandRes.data;
+    categories.value = await sellerFeaturesService.getCategories();
   } catch (error) {
-    console.error("Gagal load dropdown data:", error);
+    console.error("Gagal load categories:", error);
   }
 };
 
 // 2. Logika SKU Generator Otomatis
 const generateSKU = (variant) => {
-  const selectedBrand = brands.value.find(b => b.id === form.value.brandId);
-  const brandCode = selectedBrand ? selectedBrand.name.substring(0, 3).toUpperCase() : 'BRD';
-
+  const brandCode = 'CM'; // Cloudmart
+  
   const selectedCat = categories.value.find(c => c.id === form.value.categoryId);
   const catCode = selectedCat ? selectedCat.name.substring(0, 3).toUpperCase() : 'CAT';
 
@@ -193,7 +168,7 @@ const updateAllSKU = () => {
 
 // 3. Form Handling
 const addVariant = () => {
-  const newVariant = { sku: '', color: '', size: '', stock: 0, additionalPrice: 0 };
+  const newVariant = { sku: '', color: '', size: '', price: 0, stock: 0 };
   form.value.variants.push(newVariant);
   generateSKU(newVariant);
 };
@@ -205,9 +180,26 @@ const removeVariant = (index) => {
 const submitProduct = async () => {
   submitting.value = true;
   try {
-    await axios.post('http://localhost:3000/api/v1/products', form.value, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
+    const payload = {
+      category_id: Number(form.value.categoryId),
+      name: form.value.name,
+      description: form.value.description
+    };
+    
+    // Create main product
+    const newProduct = await sellerFeaturesService.createProduct(payload);
+    
+    // Create all variants for the product
+    for (const v of form.value.variants) {
+      if (!v.sku || !v.price) continue;
+      await sellerFeaturesService.addVariant(newProduct.id, {
+        sku: v.sku,
+        color: v.color || '-',
+        size: v.size || '-',
+        price: Number(v.price),
+        stock: Number(v.stock) || 0
+      });
+    }
     
     await Swal.fire({
       title: 'BERHASIL DISIMPAN!',
@@ -222,7 +214,7 @@ const submitProduct = async () => {
   } catch (error) {
     Swal.fire({
       title: 'OPS!',
-      text: error.response?.data?.message || 'Gagal menyimpan produk.',
+      text: error.message || 'Gagal menyimpan produk.',
       icon: 'error',
       confirmButtonColor: '#ef4444'
     });

@@ -29,8 +29,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Jika 401 dan belum pernah retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Jika 401 dan belum pernah retry, DAN bukan request ke /login atau /refresh
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/login') && !originalRequest.url.includes('/refresh')) {
       originalRequest._retry = true;
 
       const refreshToken = localStorage.getItem('refresh_token');
@@ -91,8 +91,26 @@ export const showToastError = (message) => {
 };
 
 export const getErrorMessage = (error) => {
-  if (error.response?.data?.message) return error.response.data.message;
-  if (error.response?.data?.error) return error.response.data.error;
+  const extractError = (errData) => {
+    if (typeof errData === 'string') return errData;
+    if (typeof errData === 'object' && errData !== null) {
+      return Object.values(errData).join(', ');
+    }
+    return null;
+  };
+
+  const err1 = error.response?.data?.errors;
+  if (err1) return extractError(err1) || 'Terjadi kesalahan';
+
+  const err2 = error.response?.data?.Errors;
+  if (err2) return extractError(err2) || 'Terjadi kesalahan';
+
+  const err3 = error.response?.data?.message;
+  if (err3) return extractError(err3) || 'Terjadi kesalahan';
+
+  const err4 = error.response?.data?.error;
+  if (err4) return extractError(err4) || 'Terjadi kesalahan';
+
   if (error.message) return error.message;
   return 'Terjadi kesalahan yang tidak diketahui';
 };
