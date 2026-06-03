@@ -25,7 +25,7 @@
         <span class="text-gray-300 text-sm">›</span>
         <button @click="currentStep > 2 && goToStep(2)"
           :class="currentStep === 2 ? 'text-gray-700 font-semibold' : currentStep > 2 ? 'text-blue-500 hover:underline' : 'text-gray-400 cursor-default'">
-          Pengiriman + Biaya Layanan (Rp 50.000)
+          Pengiriman + Biaya Layanan
         </button>
         <span class="text-gray-300 text-sm">›</span>
         <span :class="currentStep === 3 ? 'text-gray-700 font-semibold' : 'text-gray-400'">Pembayaran</span>
@@ -50,84 +50,29 @@
         <!-- Address -->
         <div>
           <h3 class="text-base font-bold text-gray-800 mb-1">Alamat Pengiriman</h3>
-          <p class="text-xs text-gray-400 mb-4">Alamat ini juga akan digunakan sebagai alamat penagihan untuk pesanan ini.</p>
+          <p class="text-xs text-gray-400 mb-4">Pilih alamat pengiriman untuk pesanan ini.</p>
 
-          <!-- Saved address dropdown -->
-          <div class="relative mb-3">
-            <label class="absolute top-2 left-4 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Alamat tersimpan</label>
-            <select v-model="form.savedAddress" class="w-full border border-gray-300 rounded-xl pt-6 pb-2.5 px-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 appearance-none bg-white">
-              <option value="new">Pakai alamat baru</option>
-              <option value="saved1">Jl. Raya Surabaya No.10</option>
-            </select>
-            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          <div v-if="savedAddresses.length === 0 && !loading" class="text-center py-8 bg-gray-50 border border-dashed border-gray-300 rounded-xl">
+            <p class="text-sm text-gray-500 mb-3">Anda belum memiliki alamat tersimpan.</p>
+            <button @click="router.push('/profile')" class="text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors">Tambah Alamat di Profil</button>
           </div>
 
-          <!-- Country -->
-          <div class="relative mb-3">
-            <label class="absolute top-2 left-4 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Negara/Wilayah</label>
-            <select v-model="form.country" class="w-full border border-gray-300 rounded-xl pt-6 pb-2.5 px-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 appearance-none bg-white">
-              <option>Indonesia</option>
-              <option>Malaysia</option>
-              <option>Singapore</option>
-            </select>
-            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-          </div>
-
-          <!-- First & Last name -->
-          <div class="flex gap-3 mb-3">
-            <div class="flex-1 relative">
-              <label class="absolute top-2 left-4 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Nama depan (opsional)</label>
-              <input v-model="form.firstName" class="w-full border border-gray-300 rounded-xl pt-6 pb-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
-            </div>
-            <div class="flex-1 relative">
-              <label class="absolute top-2 left-4 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Nama belakang</label>
-              <input v-model="form.lastName" class="w-full border border-gray-300 rounded-xl pt-6 pb-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
-            </div>
-          </div>
-
-          <!-- Address -->
-          <div class="relative mb-3">
-            <label class="absolute top-2 left-4 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Alamat</label>
-            <input v-model="form.address" class="w-full border border-gray-300 rounded-xl pt-6 pb-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
-          </div>
-
-          <!-- District & Code -->
-          <div class="flex gap-3 mb-3">
-            <div class="flex-1 relative">
-              <label class="absolute top-2 left-4 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Daerah</label>
-              <select v-model="form.district" class="w-full border border-gray-300 rounded-xl pt-6 pb-2.5 px-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 appearance-none bg-white">
-                <option>Indonesia</option><option>Surabaya</option><option>Sidoarjo</option>
-              </select>
-              <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </div>
-            <div class="flex-1 relative">
-              <label class="absolute top-2 left-4 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Kode</label>
-              <select v-model="form.kode" class="w-full border border-gray-300 rounded-xl pt-6 pb-2.5 px-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 appearance-none bg-white">
-                <option>Indonesia</option><option>60111</option>
-              </select>
-              <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </div>
-          </div>
-
-          <!-- Province & Postal -->
-          <div class="flex gap-3">
-            <div class="flex-1 relative">
-              <label class="absolute top-2 left-4 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Provinsi</label>
-              <select v-model="form.province" class="w-full border border-gray-300 rounded-xl pt-6 pb-2.5 px-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 appearance-none bg-white">
-                <option>Jawa Timur</option><option>Jawa Barat</option><option>DKI Jakarta</option>
-              </select>
-              <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </div>
-            <div class="flex-1 relative">
-              <label class="absolute top-2 left-4 text-[10px] text-gray-400 font-medium uppercase tracking-wide">Kode pos</label>
-              <input v-model="form.postalCode" type="text" class="w-full border border-gray-300 rounded-xl pt-6 pb-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300" />
-            </div>
+          <div v-else class="space-y-3">
+            <label v-for="addr in savedAddresses" :key="addr.id" 
+              class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition-all"
+              :class="form.savedAddress === addr.id ? 'border-slate-800 bg-slate-50' : 'border-gray-200 hover:border-gray-300'">
+              <input type="radio" :value="addr.id" v-model="form.savedAddress" class="mt-1 accent-slate-800" />
+              <div>
+                <p class="font-bold text-sm text-gray-800">{{ addr.recipient }} <span class="text-xs font-normal text-gray-500 ml-1">({{ addr.phone }})</span></p>
+                <p class="text-xs text-gray-600 mt-1 leading-relaxed">{{ addr.address }}, {{ addr.city }}, {{ addr.state }}, {{ addr.country }} {{ addr.postal_code }}</p>
+              </div>
+            </label>
           </div>
         </div>
 
         <!-- Action -->
         <div class="flex justify-end pt-2">
-          <button @click="goToStep(2)" class="px-8 py-3 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm rounded-xl transition-all active:scale-95 shadow-md">
+          <button @click="goToStep(2)" :disabled="savedAddresses.length === 0 || !form.savedAddress" class="px-8 py-3 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm rounded-xl transition-all disabled:opacity-50 active:scale-95 shadow-md">
             Lanjutkan ke pengiriman
           </button>
         </div>
@@ -218,47 +163,25 @@
           <div class="space-y-3">
             <!-- Midtrans -->
             <div
-              class="border-2 rounded-xl overflow-hidden transition-all"
-              :class="form.paymentMethod === 'midtrans' ? 'border-slate-800' : 'border-gray-200'"
+              class="border-2 rounded-xl overflow-hidden transition-all border-slate-800"
             >
               <label class="flex items-center justify-between px-4 py-3.5 cursor-pointer">
                 <div class="flex items-center gap-3">
-                  <input type="radio" value="midtrans" v-model="form.paymentMethod" class="accent-slate-800" />
-                  <span class="text-sm font-medium text-gray-700">Payment via Midtrans</span>
+                  <input type="radio" value="midtrans" v-model="form.paymentMethod" class="accent-slate-800" checked />
+                  <span class="text-sm font-medium text-gray-700">Pembayaran Online (Midtrans)</span>
                 </div>
-                <!-- Bank logos -->
+                <!-- Bank/E-wallet logos -->
                 <div class="flex items-center gap-1.5">
-                  <div class="px-2 py-1 bg-blue-700 text-white text-[9px] font-black rounded">BCA</div>
-                  <div class="px-2 py-1 bg-yellow-500 text-white text-[9px] font-black rounded">MANDIRI</div>
-                  <div class="text-[10px] text-gray-500 font-bold">+22</div>
+                  <div class="px-2 py-1 bg-blue-500 text-white text-[9px] font-black rounded">BCA</div>
+                  <div class="px-2 py-1 bg-green-500 text-white text-[9px] font-black rounded">GoPay</div>
+                  <div class="px-2 py-1 bg-orange-500 text-white text-[9px] font-black rounded">ShopeePay</div>
+                  <div class="text-[10px] text-gray-500 font-bold">+ lainnya</div>
                 </div>
               </label>
-              <div v-if="form.paymentMethod === 'midtrans'" class="bg-gray-50 border-t border-gray-200 px-4 py-3 text-center">
-                <p class="text-xs text-gray-500">Mengalihkan Anda ke Payments via Midtrans untuk menyelesaikan pembelian.</p>
+              <div class="bg-gray-50 border-t border-gray-200 px-4 py-3 text-center">
+                <p class="text-xs text-gray-500">Mendukung transfer bank (Virtual Account), e-Wallet (GoPay, ShopeePay, DANA), QRIS, Alfamart/Indomaret, dan Kartu Kredit.</p>
               </div>
             </div>
-
-            <!-- Atome -->
-            <label
-              class="flex items-center justify-between border-2 rounded-xl px-4 py-3.5 cursor-pointer transition-all"
-              :class="form.paymentMethod === 'atome' ? 'border-slate-800 bg-slate-50' : 'border-gray-200 hover:border-gray-300'"
-            >
-              <div class="flex items-center gap-3">
-                <input type="radio" value="atome" v-model="form.paymentMethod" class="accent-slate-800" />
-                <span class="text-sm font-medium text-gray-700">Atome PayLater – 3 easy payments, 0% interest</span>
-              </div>
-            </label>
-
-            <!-- COD -->
-            <label
-              class="flex items-center justify-between border-2 rounded-xl px-4 py-3.5 cursor-pointer transition-all"
-              :class="form.paymentMethod === 'cod' ? 'border-slate-800 bg-slate-50' : 'border-gray-200 hover:border-gray-300'"
-            >
-              <div class="flex items-center gap-3">
-                <input type="radio" value="cod" v-model="form.paymentMethod" class="accent-slate-800" />
-                <span class="text-sm font-medium text-gray-700">Bayar di Tempat (COD)</span>
-              </div>
-            </label>
           </div>
         </div>
 
@@ -294,17 +217,18 @@
     ============================================================ -->
     <div class="flex-1 bg-[#f5f4f0] border-l border-gray-200 px-10 py-10">
 
-      <!-- Product -->
-      <div class="flex items-center gap-4 mb-6">
-        <div class="relative w-16 h-16 rounded-xl bg-white flex items-center justify-center text-3xl border border-gray-200 shadow-sm shrink-0">
-          🎒
-          <span class="absolute -top-2 -right-2 w-5 h-5 bg-gray-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">1</span>
+      <!-- Products -->
+      <div v-for="item in cartItems" :key="item.id" class="flex items-center gap-4 mb-6">
+        <div class="relative w-16 h-16 rounded-xl bg-white flex items-center justify-center overflow-hidden border border-gray-200 shadow-sm shrink-0">
+          <img v-if="item.variant_image" :src="item.variant_image" class="w-full h-full object-cover" />
+          <span v-else class="text-3xl">📦</span>
+          <span class="absolute -top-2 -right-2 w-5 h-5 bg-gray-500 text-white text-[10px] font-black rounded-full flex items-center justify-center z-10">{{ item.quantity }}</span>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-bold text-gray-800 leading-snug">Nevada Ransel Backpack Elegan</p>
-          <p class="text-xs text-gray-500 mt-0.5">Brown / 18 INCH</p>
+          <p class="text-sm font-bold text-gray-800 leading-snug">{{ item.variant_name || 'Produk' }}</p>
+          <p class="text-xs text-gray-500 mt-0.5">{{ item.variant_color }} / {{ item.variant_size }}</p>
         </div>
-        <p class="text-sm font-bold text-gray-800 shrink-0">Rp. 450.000,00</p>
+        <p class="text-sm font-bold text-gray-800 shrink-0">{{ formatRupiah(item.price * item.quantity) }}</p>
       </div>
 
       <!-- Voucher -->
@@ -313,10 +237,14 @@
           v-model="voucherCode"
           type="text"
           placeholder="Kode diskon atau voucher"
-          class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-gray-400"
+          :disabled="voucherApplied"
+          class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-gray-400 disabled:bg-gray-100"
         />
-        <button class="px-5 py-2.5 border border-gray-300 bg-white text-sm font-semibold text-gray-700 rounded-xl hover:bg-gray-50 transition">
-          pakai
+        <button 
+          @click="applyVoucher"
+          :disabled="voucherApplied || !voucherCode"
+          class="px-5 py-2.5 border border-gray-300 bg-white text-sm font-semibold text-gray-700 rounded-xl hover:bg-gray-50 transition disabled:opacity-50">
+          {{ voucherApplied ? 'Dipakai' : 'Pakai' }}
         </button>
       </div>
 
@@ -324,13 +252,17 @@
       <div class="space-y-3 pt-4 border-t border-gray-300">
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600">Subtotal</span>
-          <span class="font-semibold text-gray-800">Rp. 450.000,00</span>
+          <span class="font-semibold text-gray-800">{{ formatRupiah(cartSubtotal) }}</span>
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600">Pengiriman + Biaya Layanan</span>
           <span :class="currentStep >= 2 ? 'font-semibold text-gray-800' : 'text-gray-400 italic text-xs'">
-            {{ currentStep >= 2 ? 'Rp. 50.000,00' : 'Dihitung pada tahap berikutnya' }}
+            {{ currentStep >= 2 ? (estimateData ? formatRupiah(estimateData.shipping_fee) : selectedShippingPrice) : 'Dihitung pada tahap berikutnya' }}
           </span>
+        </div>
+        <div v-if="estimateData && estimateData.discount > 0" class="flex items-center justify-between text-sm text-green-600">
+          <span>Diskon ({{ estimateData.voucher_name || voucherCode }})</span>
+          <span class="font-semibold">-{{ formatRupiah(estimateData.discount) }}</span>
         </div>
       </div>
       <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-300">
@@ -338,7 +270,8 @@
         <div class="text-right">
           <span class="text-xs text-gray-400 mr-1">IDR</span>
           <span class="text-xl font-black text-gray-900">
-            {{ currentStep >= 2 ? 'Rp 500.000,00' : 'Rp 450.000,00' }}
+            {{ formatRupiah(estimateData ? estimateData.grand_total : totalAmount) }}
+
           </span>
         </div>
       </div>
@@ -349,12 +282,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '../../services/auth';
 import { cartService } from '../../services/cart';
 import { orderService } from '../../services/order';
-import { showToastError } from '../../services/api';
+import { logisticService } from '../../services/logistic';
+import { voucherService } from '../../services/voucher';
+import { showToastError, showToastSuccess } from '../../services/api';
 import Swal from 'sweetalert2';
 
 const router = useRouter();
@@ -371,22 +306,19 @@ const cartSubtotal = ref(0);
 
 // ===================== ADDRESSES =====================
 const savedAddresses = ref([]);
+const voucherApplied = ref(false);
+const estimateData = ref(null);
 
 // ===================== FORM DATA =====================
 const form = ref({
   email: '',
-  savedAddress: 'new',
-  country: 'Indonesia',
-  firstName: '',
-  lastName: '',
-  address: '',
-  district: 'Indonesia',
-  kode: 'Indonesia',
-  province: 'Jawa Timur',
-  postalCode: '',
-  shippingMethod: 'reguler',
+  savedAddress: '',
+  shippingMethod: '',
   paymentMethod: 'midtrans',
 });
+
+// ===================== SHIPPING OPTIONS =====================
+const shippingMethods = ref([]);
 
 // ===================== FETCH DATA =====================
 const fetchData = async () => {
@@ -395,13 +327,14 @@ const fetchData = async () => {
     // Fetch profile
     const profile = await authService.getProfile();
     form.value.email = profile.email || '';
-    form.value.firstName = profile.name?.split(' ')[0] || '';
-    form.value.lastName = profile.name?.split(' ').slice(1).join(' ') || '';
 
     // Fetch addresses
     try {
       const addresses = await authService.getAddresses();
       savedAddresses.value = Array.isArray(addresses) ? addresses : [];
+      if (savedAddresses.value.length > 0) {
+        form.value.savedAddress = savedAddresses.value[0].id;
+      }
     } catch {
       savedAddresses.value = [];
     }
@@ -413,6 +346,30 @@ const fetchData = async () => {
       cartItems.value = cart.items || [];
     } catch {
       cartItems.value = [];
+    }
+
+    // Fetch logistics
+    try {
+      const logistics = await logisticService.getLogistics();
+      const methods = [];
+      logistics.forEach(log => {
+        if (log.services) {
+          log.services.forEach(srv => {
+            methods.push({
+              id: srv.id,
+              name: `${log.name} - ${srv.name}`,
+              priceValue: srv.base_price,
+              price: formatRupiah(srv.base_price)
+            });
+          });
+        }
+      });
+      shippingMethods.value = methods;
+      if (methods.length > 0 && !form.value.shippingMethod) {
+        form.value.shippingMethod = methods[0].id;
+      }
+    } catch {
+      shippingMethods.value = [];
     }
   } catch (error) {
     showToastError('Gagal memuat data checkout.');
@@ -426,25 +383,18 @@ const goToStep = (step) => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
-// ===================== SHIPPING OPTIONS =====================
-const shippingMethods = [
-  { id: 'reguler',  name: 'Pengiriman + Biaya Layanan',     price: 'Rp 21.500,00' },
-  { id: 'express',  name: 'Pengiriman Express (1-2 hari)',   price: 'Rp 50.000,00' },
-  { id: 'sameday',  name: 'Same Day Delivery',               price: 'Rp 75.000,00' },
-];
-
 const selectedShippingName = computed(() =>
-  shippingMethods.find(m => m.id === form.value.shippingMethod)?.name || '-'
+  shippingMethods.value.find(m => m.id === form.value.shippingMethod)?.name || '-'
 );
 const selectedShippingPrice = computed(() =>
-  shippingMethods.find(m => m.id === form.value.shippingMethod)?.price || '-'
+  shippingMethods.value.find(m => m.id === form.value.shippingMethod)?.price || '-'
 );
 
 // ===================== COMPUTED =====================
 const fullAddress = computed(() => {
-  const { address, district, province, country } = form.value;
-  const parts = [address, district, province, country].filter(Boolean);
-  return parts.length ? parts.join(', ') : 'Belum diisi';
+  const addr = savedAddresses.value.find(a => a.id === form.value.savedAddress);
+  if (!addr) return 'Belum dipilih';
+  return `${addr.address}, ${addr.city}, ${addr.state}`;
 });
 
 const formatRupiah = (amount) => {
@@ -453,43 +403,80 @@ const formatRupiah = (amount) => {
 
 const totalAmount = computed(() => {
   if (currentStep.value >= 2) {
-    return cartSubtotal.value + 50000;
+    const method = shippingMethods.value.find(m => m.id === form.value.shippingMethod);
+    const shippingCost = method ? method.priceValue : 0;
+    return cartSubtotal.value + shippingCost;
   }
   return cartSubtotal.value;
+});
+
+// ===================== ESTIMATE ORDER =====================
+const fetchEstimate = async () => {
+  if (!form.value.shippingMethod) return;
+  try {
+    const res = await orderService.estimateOrder(form.value.shippingMethod, voucherApplied.value ? voucherCode.value : '');
+    estimateData.value = res;
+  } catch {
+    estimateData.value = null;
+  }
+};
+
+const applyVoucher = async () => {
+  if (!voucherCode.value) return;
+  try {
+    await voucherService.claimVoucher(voucherCode.value);
+    voucherApplied.value = true;
+    if (currentStep.value >= 2) {
+      await fetchEstimate();
+    }
+  } catch (error) {
+    voucherApplied.value = false;
+  }
+};
+
+watch(() => form.value.shippingMethod, () => {
+  if (currentStep.value >= 2 && form.value.shippingMethod) {
+    fetchEstimate();
+  }
+});
+
+watch(currentStep, (newStep) => {
+  if (newStep >= 2 && form.value.shippingMethod) {
+    fetchEstimate();
+  }
 });
 
 // ===================== PLACE ORDER =====================
 const placeOrder = async () => {
   placingOrder.value = true;
   try {
-    const addressPayload = {
-      recipient: `${form.value.firstName} ${form.value.lastName}`.trim(),
-      phone: '',
-      address: form.value.address,
-      city: form.value.district,
-      state: form.value.province,
-      country: form.value.country,
-      postal_code: form.value.postalCode,
-      type: 'home',
-    };
-
-    const response = await orderService.checkout(addressPayload);
-
-    // Jika ada payment_url dari midtrans, redirect
-    if (response.payment_url) {
-      window.location.href = response.payment_url;
+    const addr = savedAddresses.value.find(a => a.id === form.value.savedAddress);
+    if (!addr) {
+      showToastError('Silakan pilih alamat terlebih dahulu');
+      placingOrder.value = false;
       return;
     }
+    const addressString = `${addr.recipient}, ${addr.phone}, ${addr.address}, ${addr.city}, ${addr.state}, ${addr.country} ${addr.postal_code}`.trim();
 
-    // Jika ada snap_token, bisa digunakan untuk Midtrans Snap
-    if (response.snap_token && window.snap) {
-      window.snap.pay(response.snap_token, {
-        onSuccess: () => router.push('/payment-success'),
-        onPending: () => router.push('/orders'),
-        onError: () => showToastError('Pembayaran gagal.'),
-        onClose: () => {},
-      });
-      return;
+    const order = await orderService.checkout(addressString, form.value.shippingMethod, voucherCode.value);
+
+    if (form.value.paymentMethod === 'midtrans' && order && order.id) {
+      const paymentInfo = await orderService.initiatePayment(order.id);
+      
+      if (paymentInfo.payment_url) {
+        window.location.href = paymentInfo.payment_url;
+        return;
+      }
+
+      if (paymentInfo.snap_token && window.snap) {
+        window.snap.pay(paymentInfo.snap_token, {
+          onSuccess: () => router.push('/payment-success'),
+          onPending: () => router.push('/orders'),
+          onError: () => showToastError('Pembayaran gagal.'),
+          onClose: () => router.push('/orders'),
+        });
+        return;
+      }
     }
 
     // Default: redirect ke payment success

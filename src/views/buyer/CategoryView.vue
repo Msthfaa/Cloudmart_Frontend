@@ -225,8 +225,9 @@
                 style="aspect-ratio: 1/1.1;"
                 :class="product.bgColor"
               >
-                <!-- Emoji placeholder — replace with <img> on BE integration -->
-                <span class="text-7xl select-none transform group-hover:scale-110 transition-transform duration-500">
+                <!-- Product Image -->
+                <img v-if="product.image_url" :src="product.image_url" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                <span v-else class="text-7xl select-none transform group-hover:scale-110 transition-transform duration-500">
                   {{ product.emoji }}
                 </span>
 
@@ -523,8 +524,9 @@ const fetchProducts = async () => {
         originalPrice: null,
         isNew: i < 6,
         emoji: ['👕', '👔', '👗', '🧥', '👖', '🎽'][i % 6],
-        bgColor: ['bg-stone-100', 'bg-amber-50', 'bg-gray-100', 'bg-blue-50', 'bg-rose-50', 'bg-orange-50'][i % 6],
+        bgColor: 'bg-stone-100', // Default background if no image
         variants: variants,
+        image_url: p.image_url,
       };
     });
   } catch (error) {

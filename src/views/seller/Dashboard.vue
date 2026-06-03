@@ -23,12 +23,12 @@
         <div class="lg:col-span-2 bg-white/90 backdrop-blur-sm p-8 rounded-3xl shadow-sm border border-blue-100">
           <div class="flex justify-between items-center mb-6">
             <h3 class="font-bold text-lg text-slate-800">Performa Penjualan</h3>
-            <button @click="showAlert" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-600 hover:text-white transition-all">
-              Filter Minggu Ini
-            </button>
           </div>
-          <div class="h-72 bg-gradient-to-b from-blue-50/50 to-transparent rounded-2xl border-2 border-dashed border-blue-200 flex items-center justify-center">
-            <p class="text-blue-400 font-medium animate-pulse">Grafik sedang disiapkan...</p>
+          <div class="h-72 w-full">
+            <Line v-if="chartData.labels && chartData.labels.length" :data="chartData" :options="chartOptions" />
+            <div v-else class="h-full bg-gradient-to-b from-blue-50/50 to-transparent rounded-2xl border-2 border-dashed border-blue-200 flex items-center justify-center">
+              <p class="text-blue-400 font-medium animate-pulse">Memuat data grafik...</p>
+            </div>
           </div>
         </div>
 
@@ -59,6 +59,27 @@ import { ref, onMounted } from 'vue';
 import Swal from 'sweetalert2';
 import { sellerDashboardService } from '../../services/sellerDashboard';
 import { sellerOrdersService } from '../../services/sellerOrders';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { Line } from 'vue-chartjs';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const stats = ref([
   { label: 'Total Penjualan', value: 'Rp 0', icon: '💰' },
@@ -67,6 +88,17 @@ const stats = ref([
 ]);
 
 const recentOrders = ref([]);
+const chartData = ref({ labels: [], datasets: [] });
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false }
+  },
+  scales: {
+    y: { beginAtZero: true }
+  }
+};
 
 const fetchData = async () => {
   try {
@@ -79,16 +111,51 @@ const fetchData = async () => {
     
     // Fetch orders for the recent list
     const orders = await sellerOrdersService.getOrders();
-    // Sort desc (newest first), take top 3
-    const sorted = orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 3);
+    // Sort desc (newest first)
+    const sorted = orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
-    recentOrders.value = sorted.map(o => ({
+    recentOrders.value = sorted.slice(0, 3).map(o => ({
       id: o.id,
       buyer: `User ${o.user_id}`,
       total: 'Rp ' + Number(o.grand_total).toLocaleString('id-ID'),
       status: o.payment_status === 'settlement' || o.payment_status === 'paid' ? 'Dibayar' : 'Menunggu',
       icon: '🛒'
     }));
+
+    // Generate chart data (last 7 days)
+    const last7Days = [...Array(7)].map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toISOString().split('T')[0];
+    }).reverse();
+
+    const salesByDate = {};
+    last7Days.forEach(date => salesByDate[date] = 0);
+
+    orders.forEach(o => {
+      if (o.payment_status === 'paid' || o.payment_status === 'settlement' || ['shipped', 'delivered', 'completed'].includes(o.status)) {
+        const dateStr = new Date(o.created_at).toISOString().split('T')[0];
+        if (salesByDate[dateStr] !== undefined) {
+          salesByDate[dateStr] += Number(o.grand_total);
+        }
+      }
+    });
+
+    chartData.value = {
+      labels: last7Days.map(d => {
+        const dateObj = new Date(d);
+        return dateObj.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' });
+      }),
+      datasets: [
+        {
+          label: 'Omset',
+          backgroundColor: '#3b82f6',
+          borderColor: '#3b82f6',
+          data: Object.values(salesByDate),
+          tension: 0.4
+        }
+      ]
+    };
   } catch (error) {
     console.error("Gagal memuat dashboard:", error);
   }
@@ -97,17 +164,4 @@ const fetchData = async () => {
 onMounted(() => {
   fetchData();
 });
-
-
-
-const showAlert = () => {
-  Swal.fire({
-    title: 'Ganti Periode?',
-    text: "Fitur ini masih dalam pengembangan, kawan!",
-    icon: 'info',
-    confirmButtonText: 'Gaskeun!',
-    confirmButtonColor: '#1e293b', // Warna slate-800
-    borderRadius: '20px'
-  });
-};
 </script>

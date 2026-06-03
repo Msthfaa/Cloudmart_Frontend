@@ -123,26 +123,27 @@
         </div>
       </div>
 
-      <!-- Products Grid -->
       <div class="grid grid-cols-5 gap-5">
         <div
           v-for="product in filteredProducts.slice(0, 5)"
           :key="product.id"
           class="group cursor-pointer"
+          @click="$router.push(`/product/${product.id}`)"
         >
-          <div class="aspect-square rounded-2xl mb-3 overflow-hidden flex items-center justify-center text-5xl transition-shadow group-hover:shadow-xl"
-               :class="product.bgColor">
-            {{ product.emoji }}
+          <div class="aspect-square rounded-2xl mb-3 overflow-hidden flex items-center justify-center text-5xl transition-shadow group-hover:shadow-xl bg-stone-100">
+            <img v-if="product.image_url" :src="product.image_url" class="w-full h-full object-cover" />
+            <span v-else>📦</span>
           </div>
-          <p class="text-[10px] text-gray-400 uppercase tracking-widest font-medium">{{ product.brand }}</p>
+          <p class="text-[10px] text-gray-400 uppercase tracking-widest font-medium">{{ product.category?.name || 'Category' }}</p>
           <p class="text-sm text-gray-800 font-medium leading-snug mt-0.5 line-clamp-2">{{ product.name }}</p>
           <div class="flex items-center gap-1 my-1.5">
-            <span class="text-yellow-400 text-xs">{{ '★'.repeat(Math.floor(product.rating)) }}{{ product.rating % 1 ? '☆' : '' }}</span>
-            <span class="text-[11px] text-gray-400">({{ product.reviews }})</span>
+            <span class="text-yellow-400 text-xs">★★★★★</span>
+            <span class="text-[11px] text-gray-400">(0)</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="text-sm font-black text-gray-900">{{ product.price }}</span>
-            <span v-if="product.originalPrice" class="text-xs text-gray-400 line-through">{{ product.originalPrice }}</span>
+            <span class="text-sm font-black text-gray-900">
+              {{ formatRupiah(product.price) }}
+            </span>
           </div>
         </div>
       </div>
@@ -214,8 +215,8 @@
             <span class="text-[11px] text-gray-400">({{ product.reviews }})</span>
           </div>
           <div class="flex items-center gap-2">
-            <span class="text-sm font-black text-red-600">{{ product.price }}</span>
-            <span class="text-xs text-gray-400 line-through">{{ product.originalPrice }}</span>
+            <span class="text-sm font-black text-red-600">{{ product.priceFormatted }}</span>
+            <span class="text-xs text-gray-400 line-through">{{ product.originalPriceFormatted }}</span>
           </div>
         </div>
       </div>
@@ -247,6 +248,70 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { productService } from '../../services/product';
+
+const router = useRouter();
+
+const formatRupiah = (val) => 'Rp ' + Number(val).toLocaleString('id-ID');
+
+const dynamicProducts = ref([]);
+const allProducts = ref([]);
+const flashProducts = ref([]);
+
+const loadProducts = async () => {
+  try {
+    const res = await productService.getProducts({ limit: 20 });
+    const fetched = res.products || [];
+
+    // Mapping helper
+    const mapProduct = (p, idx, extra = {}) => {
+      const variants = p.variants || [];
+      const prices = variants.map(v => v.price).filter(Boolean);
+      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+      
+      return {
+        id: p.id,
+        brand: p.store?.name || p.brand || 'Unknown',
+        name: p.name || 'Produk',
+        price: minPrice,
+        priceFormatted: `Rp ${Number(minPrice).toLocaleString('id-ID')}`,
+        originalPriceFormatted: `Rp ${Number(minPrice * 1.3).toLocaleString('id-ID')}`,
+        rating: 4.5,
+        reviews: Math.floor(Math.random() * 500) + 50,
+        emoji: ['👕', '👔', '👗', '🧥', '👖', '🎽', '🎒', '👜', '👟'][idx % 9],
+        bgColor: 'bg-stone-100',
+        image_url: p.image_url,
+        category: p.category,
+        ...extra
+      };
+    };
+
+    // 1. Featured Products (first 5)
+    dynamicProducts.value = fetched.slice(0, 5).map((p, i) => mapProduct(p, i));
+
+    // 2. All Products for Tabs (next 15)
+    const tabs = ['New Arrival', 'Best Selling', 'Top Rated'];
+    allProducts.value = fetched.map((p, i) => mapProduct(p, i, {
+      tab: tabs[i % 3]
+    }));
+
+    // 3. Flash Sale (first 5, with discount)
+    flashProducts.value = fetched.slice(0, 5).map((p, i) => {
+      const mapped = mapProduct(p, i);
+      const discount = 20 + (i * 5); // 20%, 25%, etc.
+      return {
+        ...mapped,
+        discount,
+        priceFormatted: `Rp ${Number(mapped.price * (100 - discount) / 100).toLocaleString('id-ID')}`,
+        originalPriceFormatted: `Rp ${Number(mapped.price).toLocaleString('id-ID')}`
+      };
+    });
+
+  } catch (error) {
+    console.error('Failed to load products', error);
+  }
+};
 
 // ======================== HERO CAROUSEL ========================
 const currentSlide = ref(0);
@@ -293,38 +358,11 @@ const promoCards = [
 const productTabs = ['New Arrival', 'Best Selling', 'Top Rated'];
 const activeTab = ref('New Arrival');
 
-const allProducts = [
-  { id: 1, brand: 'Backpack', name: 'Rattan Vintage Canvas Leather Premium', price: 'Rp 299.000', rating: 5, reviews: 124, emoji: '🎒', bgColor: 'bg-stone-100', tab: 'New Arrival' },
-  { id: 2, brand: 'Backpack', name: 'Rattan Vintage Canvas Leather', price: 'Rp 299.000', rating: 4, reviews: 89, emoji: '🎒', bgColor: 'bg-amber-50', tab: 'New Arrival' },
-  { id: 3, brand: 'Backpack', name: 'Rattan Canvas Outdoor Edition', price: 'Rp 285.000', originalPrice: 'Rp 350.000', rating: 5, reviews: 210, emoji: '🧳', bgColor: 'bg-stone-100', tab: 'New Arrival' },
-  { id: 4, brand: 'Backpack', name: 'Rattan Vintage Slim Backpack', price: 'Rp 315.000', rating: 4, reviews: 67, emoji: '🎒', bgColor: 'bg-amber-50', tab: 'New Arrival' },
-  { id: 5, brand: 'Longco', name: 'Rattan Ridge Canvas Men Edition', price: 'Rp 289.000', rating: 5, reviews: 340, emoji: '🎒', bgColor: 'bg-stone-50', tab: 'New Arrival' },
-  { id: 6, brand: 'Nevada', name: 'Men Polo Shirt Premium Cotton', price: 'Rp 189.000', originalPrice: 'Rp 249.000', rating: 5, reviews: 512, emoji: '👕', bgColor: 'bg-blue-50', tab: 'Best Selling' },
-  { id: 7, brand: 'Nevada', name: 'Slim Fit Chino Pants Modern', price: 'Rp 229.000', rating: 4, reviews: 391, emoji: '👖', bgColor: 'bg-stone-100', tab: 'Best Selling' },
-  { id: 8, brand: 'Cole', name: 'Kemeja Flanel Premium Check', price: 'Rp 279.000', rating: 5, reviews: 445, emoji: '👔', bgColor: 'bg-red-50', tab: 'Best Selling' },
-  { id: 9, brand: 'Suko', name: 'Classic Denim Jacket Washed', price: 'Rp 399.000', originalPrice: 'Rp 499.000', rating: 4, reviews: 278, emoji: '🧥', bgColor: 'bg-sky-50', tab: 'Best Selling' },
-  { id: 10, brand: 'Walrus', name: 'Casual Linen Shirt Relaxed Fit', price: 'Rp 199.000', rating: 5, reviews: 602, emoji: '👕', bgColor: 'bg-amber-50', tab: 'Best Selling' },
-  { id: 11, brand: 'Eiger', name: 'Trail Hiking Backpack 45L', price: 'Rp 549.000', rating: 5, reviews: 713, emoji: '🎒', bgColor: 'bg-green-50', tab: 'Top Rated' },
-  { id: 12, brand: "Gab's", name: 'Leather Wallet Bifold Premium', price: 'Rp 149.000', rating: 5, reviews: 892, emoji: '👜', bgColor: 'bg-amber-100', tab: 'Top Rated' },
-  { id: 13, brand: 'TZone', name: 'Chronograph Sports Watch Steel', price: 'Rp 679.000', rating: 5, reviews: 534, emoji: '⌚', bgColor: 'bg-gray-100', tab: 'Top Rated' },
-  { id: 14, brand: 'Lois', name: 'Slim Straight Jeans Dark Wash', price: 'Rp 319.000', originalPrice: 'Rp 399.000', rating: 5, reviews: 448, emoji: '👖', bgColor: 'bg-blue-50', tab: 'Top Rated' },
-  { id: 15, brand: 'Nevada', name: 'Batik Modern Long Sleeve Shirt', price: 'Rp 259.000', rating: 5, reviews: 675, emoji: '👔', bgColor: 'bg-orange-50', tab: 'Top Rated' },
-];
-
-const filteredProducts = computed(() => allProducts.filter(p => p.tab === activeTab.value));
+const filteredProducts = computed(() => allProducts.value.filter(p => p.tab === activeTab.value));
 
 // ======================== BRANDS ========================
 const brandsList = ['Nevada', 'Cole', 'Suko', "Gab's", 'Lois', 'Walrus', 'TZone', 'Polo', 'Eiger', 'Erigo', 'Uniqlo', 'H&M', 'Adidas', 'Nike', 'Vans', 'Zara'];
 const brands = brandsList.map((name, i) => ({ id: i + 1, name, initial: name[0].toUpperCase() }));
-
-// ======================== FLASH SALE ========================
-const flashProducts = [
-  { id: 101, brand: 'Backpack', name: 'Rattan Vintage Canvas Leather Classic', price: 'Rp 205.000', originalPrice: 'Rp 299.000', discount: 31, rating: 4, reviews: 127, emoji: '🎒', bgColor: 'bg-stone-100' },
-  { id: 102, brand: 'Nevada', name: 'Men Polo Shirt Cotton Pique', price: 'Rp 129.000', originalPrice: 'Rp 189.000', discount: 32, rating: 4, reviews: 89, emoji: '👕', bgColor: 'bg-blue-50' },
-  { id: 103, brand: 'Cole', name: 'Chino Jogger Pants Relaxed', price: 'Rp 159.000', originalPrice: 'Rp 229.000', discount: 31, rating: 4, reviews: 204, emoji: '👖', bgColor: 'bg-amber-50' },
-  { id: 104, brand: 'Suko', name: 'Casual Hoodie Fleece Premium', price: 'Rp 219.000', originalPrice: 'Rp 349.000', discount: 37, rating: 5, reviews: 163, emoji: '🧥', bgColor: 'bg-stone-100' },
-  { id: 105, brand: 'Walrus', name: 'Canvas Sneakers Low Profile', price: 'Rp 269.000', originalPrice: 'Rp 399.000', discount: 33, rating: 4, reviews: 94, emoji: '👟', bgColor: 'bg-sky-50' },
-];
 
 // ======================== BEST CHOICE ========================
 const bestChoices = [
@@ -356,6 +394,7 @@ const updateCountdown = () => {
 
 let timer;
 onMounted(() => {
+  loadProducts();
   updateCountdown();
   timer = setInterval(updateCountdown, 1000);
 });

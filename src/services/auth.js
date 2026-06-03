@@ -12,6 +12,17 @@ export const authService = {
       if (responseData.refresh_token) {
         localStorage.setItem('refresh_token', responseData.refresh_token);
       }
+
+      // Fetch user profile and store role
+      try {
+        const profileResponse = await api.get('/profile');
+        if (profileResponse.data && profileResponse.data.data) {
+          const userRole = profileResponse.data.data.role;
+          localStorage.setItem('user_role', userRole);
+        }
+      } catch (err) {
+        console.error("Gagal mendapatkan profile saat login", err);
+      }
       showToastSuccess('Login berhasil!');
       return responseData;
     } catch (error) {
@@ -67,6 +78,7 @@ export const authService = {
   logout() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user_role');
   },
 
   // ===================== CHECK AUTH =====================

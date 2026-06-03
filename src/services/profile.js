@@ -30,5 +30,21 @@ export const profileService = {
     } catch (error) {
       throw new Error(getErrorMessage(error));
     }
+  },
+
+  // Upload Avatar
+  async uploadAvatar(file) {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const response = await api.post('/profile/avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
   }
 };

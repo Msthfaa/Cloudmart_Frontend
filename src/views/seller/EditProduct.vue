@@ -5,11 +5,17 @@
         <button @click="$router.push('/admin/products')" class="group flex items-center text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] mb-2 hover:text-blue-800 transition-all">
           <span class="mr-2 group-hover:-translate-x-1 transition-transform">←</span> Kembali ke Katalog
         </button>
-        <h2 class="text-4xl font-black text-slate-800 tracking-tighter italic uppercase">Tambah Produk Baru</h2>
+        <h2 class="text-4xl font-black text-slate-800 tracking-tighter italic uppercase">Edit Produk</h2>
       </div>
     </div>
 
-    <form @submit.prevent="submitProduct" class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <!-- Loading State -->
+    <div v-if="loadingProduct" class="flex flex-col items-center justify-center py-20">
+      <div class="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+      <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Mengambil Data Produk...</p>
+    </div>
+
+    <form v-else @submit.prevent="submitProduct" class="grid grid-cols-1 lg:grid-cols-3 gap-10">
       
       <div class="lg:col-span-2 space-y-10">
         
@@ -43,6 +49,10 @@
 
             <div>
               <label class="label-style">Gambar Produk (Utama)</label>
+              <div v-if="existingProductImage" class="mb-4">
+                <img :src="existingProductImage" alt="Produk" class="w-24 h-24 object-cover rounded-xl border border-slate-200">
+                <p class="text-[10px] text-slate-400 mt-1 italic">Gambar saat ini. Unggah gambar baru untuk menggantinya.</p>
+              </div>
               <input type="file" accept="image/*" @change="handleProductImageChange" class="w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer" />
             </div>
           </div>
@@ -62,7 +72,13 @@
           <div class="space-y-4">
             <div v-for="(v, index) in form.variants" :key="index" class="bg-white p-6 rounded-[2rem] border border-blue-50 relative group hover:shadow-md transition-shadow">
               
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+              <!-- Badge untuk menandakan ini varian baru atau lama -->
+              <div class="absolute -top-3 -right-3">
+                <span v-if="v.id" class="px-3 py-1 bg-slate-100 text-slate-500 text-[9px] font-black uppercase rounded-full shadow-sm border border-slate-200">ID: {{ v.id }}</span>
+                <span v-else class="px-3 py-1 bg-green-100 text-green-600 text-[9px] font-black uppercase rounded-full shadow-sm border border-green-200">Baru</span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end mt-2">
                 <div class="lg:col-span-2">
                   <label class="text-[9px] font-black text-blue-300 uppercase mb-2 block tracking-widest">SKU Otomatis</label>
                   <input v-model="v.sku" readonly placeholder="Generating..." class="w-full bg-blue-50/50 border-0 p-4 rounded-2xl text-[11px] font-black text-blue-600 outline-none cursor-not-allowed italic">
@@ -89,6 +105,10 @@
               <div class="mt-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-t border-blue-50 pt-4">
                 <div class="w-full max-w-sm">
                   <label class="text-[9px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Gambar Varian</label>
+                  <div v-if="v.existingImage" class="mb-2 flex items-center gap-3">
+                    <img :src="v.existingImage" class="w-12 h-12 object-cover rounded-lg border border-slate-200">
+                    <span class="text-[9px] text-slate-400 italic">Gambar lama tersimpan</span>
+                  </div>
                   <input type="file" accept="image/*" @change="e => handleVariantImageChange(e, v)" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 cursor-pointer" />
                 </div>
 
@@ -106,15 +126,17 @@
           <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-8 text-center">Status Publikasi</h4>
           
           <div class="space-y-4 mb-8">
-            <div class="flex items-center justify-between p-4 bg-green-50 rounded-3xl border border-green-100">
-              <span class="text-[10px] font-black text-green-700 uppercase italic">Katalog Aktif</span>
-              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-3xl border border-blue-100">
+              <span class="text-[10px] font-black text-blue-700 uppercase italic">Update Katalog</span>
+              <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
             </div>
-            <p class="text-[10px] text-slate-400 text-center leading-relaxed">Pastikan semua data varian dan SKU sudah benar sebelum disimpan ke sistem Cloudmart.</p>
+            <p class="text-[10px] text-slate-400 text-center leading-relaxed">
+              Varian yang Anda hapus akan benar-benar dibuang dari sistem setelah Anda menekan tombol "Simpan Perubahan".
+            </p>
           </div>
 
           <button type="submit" :disabled="submitting" class="w-full bg-slate-800 text-white py-6 rounded-[2rem] font-black shadow-xl hover:bg-slate-900 transition-all tracking-[0.2em] active:scale-95 disabled:opacity-50">
-            {{ submitting ? 'MENYIMPAN...' : 'SIMPAN PRODUK' }}
+            {{ submitting ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN' }}
           </button>
           
           <button @click="$router.push('/admin/products')" type="button" class="w-full mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors">
@@ -128,13 +150,24 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { sellerFeaturesService } from '../../services/sellerFeatures';
+import { productService } from '../../services/product';
 import Swal from 'sweetalert2';
 
 const router = useRouter();
+const route = useRoute();
+const productId = route.params.id;
+
+const loadingProduct = ref(true);
 const submitting = ref(false);
 const categories = ref([]);
+
+// State for deletion tracking
+const deletedVariantIds = ref([]);
+
+// Existing images
+const existingProductImage = ref(null);
 
 // Form Data sesuai skema backend
 const form = ref({
@@ -142,17 +175,58 @@ const form = ref({
   description: '',
   categoryId: '',
   imageFile: null,
-  variants: [
-    { sku: '', color: '', size: '', price: 0, stock: 0, imageFile: null }
-  ]
+  variants: []
 });
 
-// 1. Fetch data Categories
+// 1. Fetch data Categories & Product
 const fetchInitialData = async () => {
+  loadingProduct.value = true;
   try {
-    categories.value = await sellerFeaturesService.getCategories();
+    // Parallel fetch
+    const [catData, prodData] = await Promise.all([
+      sellerFeaturesService.getCategories(),
+      productService.getProductById(productId)
+    ]);
+    
+    categories.value = catData;
+
+    // Populate form data
+    form.value.name = prodData.name;
+    form.value.description = prodData.description || '';
+    form.value.categoryId = prodData.category_id || (prodData.category ? prodData.category.id : '');
+    
+    if (prodData.images && prodData.images.length > 0) {
+      existingProductImage.value = prodData.images[0].image_url || prodData.images[0].imageUrl;
+    }
+
+    if (prodData.variants && prodData.variants.length > 0) {
+      form.value.variants = prodData.variants.map(v => {
+        let vImg = null;
+        if (v.images && v.images.length > 0) {
+          vImg = v.images[0].image_url || v.images[0].imageUrl;
+        }
+        return {
+          id: v.id, // ID marks it as existing
+          sku: v.sku,
+          color: v.color === '-' ? '' : v.color,
+          size: v.size === '-' ? '' : v.size,
+          price: v.price,
+          stock: v.stock,
+          imageFile: null,
+          existingImage: vImg
+        };
+      });
+    } else {
+      // Fallback if no variants
+      addVariant();
+    }
+    
   } catch (error) {
-    console.error("Gagal load categories:", error);
+    console.error("Gagal load product:", error);
+    Swal.fire('Error', 'Gagal memuat data produk', 'error');
+    router.push('/admin/products');
+  } finally {
+    loadingProduct.value = false;
   }
 };
 
@@ -173,6 +247,7 @@ const generateSKU = (variant) => {
   const colorCode = variant.color ? variant.color.substring(0, 2).toUpperCase() : 'XX';
   const sizeCode = variant.size ? variant.size.toUpperCase() : '00';
 
+  // Only auto-generate SKU if it's a new variant, OR if you want to allow overwriting existing SKU
   variant.sku = `${brandCode}-${catCode}-${nameCode}-${colorCode}${sizeCode}`;
 };
 
@@ -183,12 +258,17 @@ const updateAllSKU = () => {
 
 // 3. Form Handling
 const addVariant = () => {
-  const newVariant = { sku: '', color: '', size: '', price: 0, stock: 0, imageFile: null };
+  const newVariant = { id: null, sku: '', color: '', size: '', price: 0, stock: 0, imageFile: null, existingImage: null };
   form.value.variants.push(newVariant);
   generateSKU(newVariant);
 };
 
 const removeVariant = (index) => {
+  const v = form.value.variants[index];
+  if (v.id) {
+    // If it has an ID, it means it's an existing variant that must be deleted via API
+    deletedVariantIds.value.push(v.id);
+  }
   form.value.variants.splice(index, 1);
 };
 
@@ -209,34 +289,55 @@ const submitProduct = async () => {
       description: form.value.description
     };
     
-    // Create main product
-    const newProduct = await sellerFeaturesService.createProduct(payload);
+    // 1. Update main product
+    await sellerFeaturesService.updateProduct(productId, payload);
     
-    // Upload product image if exists
+    // 2. Upload new product image if exists
     if (form.value.imageFile) {
-      await sellerFeaturesService.uploadProductImage(newProduct.id, form.value.imageFile);
+      await sellerFeaturesService.uploadProductImage(productId, form.value.imageFile);
     }
     
-    // Create all variants for the product
+    // 3. Delete removed variants
+    for (const deletedId of deletedVariantIds.value) {
+      try {
+        await sellerFeaturesService.deleteVariant(deletedId);
+      } catch (err) {
+        console.warn(`Failed to delete variant ${deletedId}`, err);
+      }
+    }
+    
+    // 4. Update existing variants / Create new variants
     for (const v of form.value.variants) {
       if (!v.sku || !v.price) continue;
-      const newVariant = await sellerFeaturesService.addVariant(newProduct.id, {
+      
+      const variantPayload = {
         sku: v.sku,
         color: v.color || '-',
         size: v.size || '-',
         price: Number(v.price),
         stock: Number(v.stock) || 0
-      });
+      };
+
+      let currentVariantId = v.id;
+
+      if (v.id) {
+        // Update existing variant
+        await sellerFeaturesService.updateVariant(v.id, variantPayload);
+      } else {
+        // Create new variant
+        const newVariant = await sellerFeaturesService.addVariant(productId, variantPayload);
+        currentVariantId = newVariant.id;
+      }
       
-      // Upload variant image if exists
-      if (v.imageFile) {
-        await sellerFeaturesService.uploadVariantImage(newVariant.id, v.imageFile);
+      // Upload variant image if a new file was selected
+      if (v.imageFile && currentVariantId) {
+        await sellerFeaturesService.uploadVariantImage(currentVariantId, v.imageFile);
       }
     }
     
     await Swal.fire({
-      title: 'BERHASIL DISIMPAN!',
-      text: 'Produk baru telah masuk ke sistem Cloudmart.',
+      title: 'BERHASIL DIPERBARUI!',
+      text: 'Perubahan produk telah disimpan ke sistem Cloudmart.',
       icon: 'success',
       confirmButtonColor: '#1e293b',
       borderRadius: '40px',
@@ -247,7 +348,7 @@ const submitProduct = async () => {
   } catch (error) {
     Swal.fire({
       title: 'OPS!',
-      text: error.message || 'Gagal menyimpan produk.',
+      text: error.message || 'Gagal menyimpan perubahan produk.',
       icon: 'error',
       confirmButtonColor: '#ef4444'
     });

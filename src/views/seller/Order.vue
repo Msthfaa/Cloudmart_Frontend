@@ -84,9 +84,22 @@ const fetchOrders = async () => {
   }
 };
 
+const mapShippingStatus = (status) => {
+  if (status === 'shipped') return 'Dikirim';
+  if (status === 'delivered') return 'Selesai';
+  if (status === 'processing') return 'Diproses';
+  if (status === 'pending') return 'Menunggu';
+  return status || 'Menunggu';
+};
+
 const orders = computed(() => {
   let filtered = ordersData.value;
-  // TODO: filter by activeTab if needed, though status might be pending/processing/etc.
+  if (activeTab.value !== 'Semua Pesanan') {
+    if (activeTab.value === 'Baru') filtered = filtered.filter(o => o.shipping_status === 'pending' || !o.shipping_status);
+    if (activeTab.value === 'Diproses') filtered = filtered.filter(o => o.shipping_status === 'processing');
+    if (activeTab.value === 'Selesai') filtered = filtered.filter(o => o.shipping_status === 'delivered');
+  }
+  
   return filtered.map(o => {
     const d = new Date(o.created_at);
     return {
@@ -96,16 +109,18 @@ const orders = computed(() => {
       time: d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
       customer: `User ID: ${o.user_id}`,
       total: 'Rp ' + Number(o.grand_total).toLocaleString('id-ID'),
+      paymentStatusRaw: o.payment_status,
       paymentStatus: o.payment_status === 'settlement' || o.payment_status === 'paid' ? 'Dibayar' : 'Menunggu',
-      fulfillment: o.payment_status || 'Menunggu'
+      shippingStatusRaw: o.shipping_status,
+      fulfillment: mapShippingStatus(o.shipping_status)
     };
   });
 });
 
 const summary = computed(() => [
   { label: 'Total Pesanan', value: ordersData.value.length, icon: '💼' },
-  { label: 'Menunggu Pengiriman', value: ordersData.value.filter(o => o.payment_status === 'paid' || o.payment_status === 'settlement').length, icon: '⏰' },
-  { label: 'Dalam Perjalanan', value: ordersData.value.filter(o => o.payment_status === 'shipped').length, icon: '🚚' },
+  { label: 'Menunggu Pengiriman', value: ordersData.value.filter(o => o.shipping_status === 'pending' || o.shipping_status === 'processing').length, icon: '⏰' },
+  { label: 'Dalam Perjalanan', value: ordersData.value.filter(o => o.shipping_status === 'shipped').length, icon: '🚚' },
   { label: 'Pendapatan', value: 'Lihat Dashboard', icon: '💳' }
 ]);
 
@@ -113,21 +128,51 @@ const summary = computed(() => [
 
 const getStatusClass = (status) => {
   switch (status) {
-    case 'Terkirim': return 'bg-green-100 text-green-600';
-    case 'Diproses': return 'bg-blue-100 text-blue-600';
-    case 'Menunggu': return 'bg-yellow-100 text-yellow-600';
+    case 'Selesai': return 'bg-green-100 text-green-600';
+    case 'Dikirim': return 'bg-blue-100 text-blue-600';
+    case 'Diproses': return 'bg-yellow-100 text-yellow-600';
+    case 'Menunggu': return 'bg-gray-100 text-gray-600';
     case 'Dibatalkan': return 'bg-red-100 text-red-600';
     default: return 'bg-gray-100 text-gray-600';
   }
 };
 
-const viewDetail = (order) => {
-  Swal.fire({
+const viewDetail = async (order) => {
+  const { value: newStatus } = await Swal.fire({
     title: `Detail Pesanan ${order.orderId}`,
-    html: `<div class="text-left text-sm">Customer: ${order.customer} <br> Total: ${order.total} <br> Pembayaran: ${order.paymentStatus}</div>`,
+    html: `
+      <div class="text-left text-sm space-y-2 mb-4">
+        <p><strong>Customer:</strong> ${order.customer}</p>
+        <p><strong>Total:</strong> ${order.total}</p>
+        <p><strong>Pembayaran:</strong> ${order.paymentStatus}</p>
+        <p><strong>Status Pengiriman:</strong> ${order.fulfillment}</p>
+      </div>
+    `,
+    input: 'select',
+    inputOptions: {
+      'processing': 'Diproses',
+      'shipped': 'Dikirim',
+      'delivered': 'Selesai'
+    },
+    inputPlaceholder: 'Ubah Status Pengiriman',
+    inputValue: ['processing', 'shipped', 'delivered'].includes(order.shippingStatusRaw) ? order.shippingStatusRaw : 'processing',
     icon: 'info',
+    showCancelButton: true,
+    confirmButtonText: 'Simpan Perubahan',
+    cancelButtonText: 'Batal',
     confirmButtonColor: '#2563eb'
   });
+
+  // Pastikan newStatus adalah string dari dropdown, bukan true/boolean
+  if (typeof newStatus === 'string' && newStatus !== order.shippingStatusRaw) {
+    try {
+      await sellerOrdersService.updateOrderStatus(order.id, newStatus);
+      fetchOrders();
+      Swal.fire('Berhasil', 'Status pesanan diperbarui.', 'success');
+    } catch (error) {
+      showToastError('Gagal memperbarui status pengiriman');
+    }
+  }
 };
 
 onMounted(() => {

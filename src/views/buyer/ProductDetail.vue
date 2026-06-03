@@ -60,24 +60,25 @@
               v-for="(img, i) in product.images"
               :key="i"
               @click="activeImage = i"
-              class="w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex items-center justify-center text-2xl"
+              class="w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex items-center justify-center bg-stone-100 text-2xl"
               :class="activeImage === i
-                ? 'border-blue-500 bg-blue-50 scale-105 shadow-md'
-                : 'border-gray-200 bg-gray-50 hover:border-gray-300'"
+                ? 'border-blue-500 scale-105 shadow-md'
+                : 'border-transparent hover:border-gray-300'"
             >
-              {{ img.emoji }}
+              <img v-if="img.url" :src="img.url" class="w-full h-full object-cover" />
+              <span v-else>{{ img.emoji || '📦' }}</span>
             </button>
           </div>
 
           <!-- Main Image -->
           <div
-            class="w-[420px] h-[480px] rounded-3xl overflow-hidden flex items-center justify-center relative"
-            :class="product.images[activeImage].bg"
+            class="w-[420px] h-[480px] rounded-3xl overflow-hidden flex items-center justify-center relative bg-stone-100"
           >
             <!-- Transition between images -->
             <transition name="img-fade" mode="out-in">
-              <span :key="activeImage" class="text-[9rem] select-none">
-                {{ product.images[activeImage].emoji }}
+              <img v-if="product.images[activeImage]?.url" :key="'img'+activeImage" :src="product.images[activeImage].url" class="w-full h-full object-cover" />
+              <span v-else :key="'emoji'+activeImage" class="text-[9rem] select-none">
+                {{ product.images[activeImage]?.emoji || '📦' }}
               </span>
             </transition>
 
@@ -139,18 +140,18 @@
             <p class="text-sm font-bold text-gray-700 mb-3">
               Warna: <span class="font-black text-gray-900">{{ selectedColor }}</span>
             </p>
-            <div class="flex items-center gap-2.5">
+            <div class="flex flex-wrap gap-2">
               <button
                 v-for="color in product.colors"
                 :key="color.name"
                 @click="selectedColor = color.name"
-                :title="color.name"
-                class="w-8 h-8 rounded-full border-2 transition-all hover:scale-110"
-                :style="{ backgroundColor: color.hex }"
+                class="px-4 py-2 border-2 rounded-xl text-sm font-bold transition-all"
                 :class="selectedColor === color.name
-                  ? 'border-gray-800 scale-110 shadow-md'
-                  : 'border-white shadow-sm hover:border-gray-300'"
-              ></button>
+                  ? 'border-gray-900 bg-gray-900 text-white shadow-md'
+                  : 'border-gray-200 text-gray-700 hover:border-gray-400 hover:bg-gray-50'"
+              >
+                {{ color.name }}
+              </button>
             </div>
           </div>
 
@@ -292,26 +293,59 @@
 
           <!-- Review cards -->
           <div class="space-y-4">
+            <div v-if="reviews.length === 0" class="text-center py-10">
+              <span class="text-5xl block mb-3">💬</span>
+              <p class="text-gray-500 font-medium">Belum ada ulasan untuk produk ini.</p>
+            </div>
             <div
+              v-else
               v-for="review in reviews"
               :key="review.id"
               class="border border-gray-100 rounded-2xl p-5 hover:shadow-sm transition-shadow"
             >
               <div class="flex items-start justify-between mb-3">
                 <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-black">
-                    {{ review.user[0] }}
+                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-black uppercase">
+                    {{ review.user?.name ? review.user.name[0] : 'U' }}
                   </div>
                   <div>
-                    <p class="text-sm font-bold text-gray-800">{{ review.user }}</p>
-                    <p class="text-[11px] text-gray-400">{{ review.date }} · Ukuran: {{ review.size }}</p>
+                    <p class="text-sm font-bold text-gray-800">{{ review.user?.name || 'User' }}</p>
+                    <p class="text-[11px] text-gray-400">
+                      {{ new Date(review.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) }} 
+                      · Varian: {{ review.order_item?.variant_name || '-' }}
+                    </p>
                   </div>
                 </div>
                 <div class="flex text-yellow-400 text-sm">
-                  <span v-for="i in review.rating" :key="i">★</span>
+                  <span v-for="i in 5" :key="i">{{ i <= review.rating ? '★' : '☆' }}</span>
                 </div>
               </div>
-              <p class="text-sm text-gray-600 leading-relaxed">{{ review.comment }}</p>
+              
+              <!-- Review Comment -->
+              <p v-if="review.comment" class="text-sm text-gray-600 leading-relaxed mb-3">{{ review.comment }}</p>
+              
+              <!-- Media (Images & Video) -->
+              <div v-if="(review.images && review.images.length > 0) || review.video_url" class="flex flex-wrap gap-2 mb-3">
+                <!-- Video -->
+                <a v-if="review.video_url" :href="review.video_url" target="_blank" class="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center relative overflow-hidden group border border-gray-200">
+                  <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"></path></svg>
+                  </div>
+                </a>
+                <!-- Images -->
+                <a v-for="img in review.images" :key="img.id" :href="img.image_url" target="_blank" class="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 block hover:opacity-80 transition">
+                  <img :src="img.image_url" class="w-full h-full object-cover" />
+                </a>
+              </div>
+
+              <!-- Seller Reply -->
+              <div v-if="review.reply" class="mt-4 bg-gray-50 rounded-xl p-4 border-l-4 border-blue-500">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xs font-black text-gray-800">Tanggapan Penjual</span>
+                  <span class="text-[10px] text-gray-400">{{ new Date(review.reply_created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) }}</span>
+                </div>
+                <p class="text-sm text-gray-600">{{ review.reply }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -329,8 +363,9 @@
             class="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
             @click="$router.push(`/product/${p.id}`)"
           >
-            <div class="aspect-square flex items-center justify-center text-5xl" :class="p.bg">
-              {{ p.emoji }}
+            <div class="aspect-square flex items-center justify-center text-5xl bg-stone-100 overflow-hidden">
+              <img v-if="p.image_url" :src="p.image_url" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+              <span v-else class="transform group-hover:scale-110 transition-transform duration-500">{{ p.emoji }}</span>
             </div>
             <div class="p-3">
               <p class="text-[10px] text-gray-400 uppercase tracking-widest">{{ p.brand }}</p>
@@ -368,6 +403,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { productService } from '../../services/product';
 import { cartService } from '../../services/cart';
+import { reviewService } from '../../services/review';
 import { showToastError } from '../../services/api';
 import Swal from 'sweetalert2';
 
@@ -425,6 +461,18 @@ const fetchProduct = async () => {
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
 
+    const variantImages = variants.map(v => v.image_url).filter(Boolean);
+    const allImages = [];
+    if (data.image_url) allImages.push({ url: data.image_url, emoji: null });
+    variantImages.forEach(url => {
+      if (!allImages.find(img => img.url === url)) {
+        allImages.push({ url, emoji: null });
+      }
+    });
+    if (allImages.length === 0) {
+      allImages.push({ url: null, emoji: '📦' });
+    }
+
     product.value = {
       id: data.id,
       name: data.name || '',
@@ -439,11 +487,7 @@ const fetchProduct = async () => {
       discount: null,
       stock: variants.reduce((sum, v) => sum + (v.stock || 0), 0),
       isNew: true,
-      images: [
-        { emoji: '📦', bg: 'bg-stone-100' },
-        { emoji: '🏷️', bg: 'bg-amber-50' },
-        { emoji: '📋', bg: 'bg-blue-50' },
-      ],
+      images: allImages,
       colors: uniqueColors.map(c => ({
         name: c,
         hex: getColorHex(c),
@@ -464,6 +508,11 @@ const fetchProduct = async () => {
     // Default pilihan
     if (uniqueColors.length > 0) selectedColor.value = uniqueColors[0];
     if (uniqueSizes.length > 0) selectedSize.value = uniqueSizes[0];
+
+    // Fetch related products based on category
+    if (data.category_id) {
+      fetchRelatedProducts(data.category_id);
+    }
   } catch (error) {
     showToastError('Gagal memuat detail produk.');
   } finally {
@@ -501,22 +550,44 @@ const selectedVariant = computed(() => {
 // ===================== RATING BAR =====================
 const ratingBars = { 5: 65, 4: 22, 3: 8, 2: 3, 1: 2 };
 
-// ===================== REVIEWS (Mock) =====================
-const reviews = ref([
-  { id: 1, user: 'Andi Pratama',  date: '15 Apr 2025', size: 'M', rating: 5, comment: 'Bahan halus, jahitan rapi, pas di badan. Warna krem terlihat premium banget. Udah beli 2 warna dan niat mau tambah lagi!' },
-  { id: 2, user: 'Rizky Fadhil',  date: '10 Apr 2025', size: 'L', rating: 5, comment: 'Kualitas sangat memuaskan untuk harganya. Bahan adem, tidak mudah kusut. Packing juga rapih.' },
-  { id: 3, user: 'Dito Wahyudi',  date: '2 Apr 2025',  size: 'M', rating: 4, comment: 'Bagus, hanya ukurannya sedikit slim. Sarankan naik satu ukuran jika badan agak berisi. Overall puas!' },
-  { id: 4, user: 'Farhan K.',     date: '28 Mar 2025', size: 'XL', rating: 5, comment: 'Udah order 3 kali dari toko ini, selalu konsisten kualitasnya. Rekomendasi banget!' },
-]);
+// ===================== REVIEWS =====================
+const reviews = ref([]);
 
-// ===================== RELATED PRODUCTS (Mock) =====================
-const relatedProducts = ref([
-  { id: 10, brand: 'Nevada', name: 'Nevada Polo Shirt Sport Edition', price: 'Rp 215.000', reviews: 189, emoji: '🎽', bg: 'bg-blue-50' },
-  { id: 11, brand: 'Cole',   name: 'Cole Polo Shirt Pique Premium', price: 'Rp 189.000', reviews: 95, emoji: '👕', bg: 'bg-stone-100' },
-  { id: 12, brand: 'Suko',   name: 'Suko Casual Polo Modern Fit', price: 'Rp 175.000', reviews: 213, emoji: '👔', bg: 'bg-amber-50' },
-  { id: 13, brand: 'Lois',   name: 'Lois Polo Shirt Stretch Cotton', price: 'Rp 229.000', reviews: 78, emoji: '🧥', bg: 'bg-gray-100' },
-  { id: 14, brand: 'Nevada', name: 'Nevada Polo Stripe Collection', price: 'Rp 199.000', reviews: 301, emoji: '👕', bg: 'bg-rose-50' },
-]);
+const fetchReviews = async () => {
+  try {
+    reviews.value = await reviewService.getProductReviews(route.params.id);
+  } catch (error) {
+    console.error('Failed to fetch reviews:', error);
+    // Don't show toast error for reviews, just fail silently to not annoy user
+  }
+};
+
+// ===================== RELATED PRODUCTS =====================
+const relatedProducts = ref([]);
+
+const fetchRelatedProducts = async (categoryId) => {
+  try {
+    const data = await productService.getProducts({ category_id: categoryId, limit: 6 });
+    relatedProducts.value = (data.products || []).map((p, i) => {
+      const variants = p.variants || [];
+      const prices = variants.map(v => v.price).filter(Boolean);
+      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+      
+      return {
+        id: p.id,
+        brand: p.store?.name || p.brand || 'Unknown',
+        name: p.name || 'Produk',
+        price: `Rp ${Number(minPrice).toLocaleString('id-ID')}`,
+        reviews: Math.floor(Math.random() * 500) + 50,
+        emoji: ['👕', '👔', '👗', '🧥', '👖', '🎽'][i % 6],
+        bg: 'bg-stone-100',
+        image_url: p.image_url,
+      };
+    }).filter(p => String(p.id) !== String(route.params.id)).slice(0, 5);
+  } catch (error) {
+    console.error('Failed to fetch related products:', error);
+  }
+};
 
 // ===================== INFO STRIPS =====================
 const infoStrips = [
@@ -572,6 +643,7 @@ watch(() => route.params.id, (newId) => {
 // ===================== INIT =====================
 onMounted(() => {
   fetchProduct();
+  fetchReviews();
 });
 </script>
 

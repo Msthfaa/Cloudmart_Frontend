@@ -196,16 +196,16 @@
 
             <div class="space-y-2.5 text-sm">
               <div class="flex justify-between">
-                <span class="text-gray-500">Total Harga ({{ selectedItems.length || cartItems.length }} produk)</span>
+                <span class="text-gray-500">Total Harga ({{ selectedItems.length }} produk)</span>
                 <span class="font-semibold text-gray-800">{{ formatPrice(subtotal) }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-500">Total Pengiriman</span>
-                <span class="font-semibold text-gray-800">Rp 50.000</span>
+                <span class="font-medium italic text-gray-400 text-xs text-right w-32">Dihitung saat checkout</span>
               </div>
               <div v-if="voucherApplied" class="flex justify-between text-green-600">
                 <span class="font-medium">Diskon Voucher</span>
-                <span class="font-bold">− Rp 20.000</span>
+                <span class="font-medium italic text-green-500 text-xs text-right w-32">Dihitung saat checkout</span>
               </div>
             </div>
 
@@ -223,10 +223,10 @@
             <!-- Checkout button -->
             <button
               @click="goToCheckout"
-              :disabled="selectedItems.length === 0 && cartItems.length === 0"
-              class="w-full mt-5 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black text-sm rounded-2xl transition-all active:scale-95 shadow-lg shadow-blue-200"
+              :disabled="selectedItems.length === 0"
+              class="w-full mt-5 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-sm rounded-2xl transition-all active:scale-95 shadow-lg shadow-blue-200"
             >
-              Beli Sekarang ({{ selectedItems.length || cartItems.length }} produk)
+              Beli Sekarang ({{ selectedItems.length }} produk)
             </button>
 
             <p class="text-center text-[11px] text-gray-400 mt-3 flex items-center justify-center gap-1">
@@ -268,7 +268,10 @@
             class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
             @click="$router.push(`/product/${p.id}`)"
           >
-            <div class="aspect-square flex items-center justify-center text-4xl" :class="p.bg">{{ p.emoji }}</div>
+            <div class="aspect-square flex items-center justify-center text-4xl bg-stone-100 overflow-hidden">
+              <img v-if="p.image_url" :src="p.image_url" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+              <span v-else class="transform group-hover:scale-110 transition-transform duration-500">{{ p.emoji }}</span>
+            </div>
             <div class="p-3">
               <p class="text-[10px] text-gray-400 uppercase tracking-widest font-medium">{{ p.brand }}</p>
               <p class="text-sm font-semibold text-gray-800 leading-snug mt-0.5 line-clamp-2">{{ p.name }}</p>
@@ -427,9 +430,16 @@ const removeSelected = async () => {
 const voucherCode = ref('');
 const voucherApplied = ref(false);
 
-const applyVoucher = () => {
+import { voucherService } from '../../services/voucher';
+
+const applyVoucher = async () => {
   if (voucherCode.value.trim()) {
-    voucherApplied.value = true;
+    try {
+      await voucherService.claimVoucher(voucherCode.value);
+      voucherApplied.value = true;
+    } catch {
+      voucherApplied.value = false;
+    }
   }
 };
 
@@ -439,9 +449,7 @@ const formatPrice = (amount) => {
 };
 
 const activeCart = computed(() =>
-  selectedItems.value.length > 0
-    ? cartItems.value.filter(i => selectedItems.value.includes(i.id))
-    : cartItems.value
+  cartItems.value.filter(i => selectedItems.value.includes(i.id))
 );
 
 const subtotal = computed(() =>
@@ -456,8 +464,9 @@ const savings = computed(() =>
 );
 
 const grandTotal = computed(() => {
-  let total = subtotal.value + 50000; // + shipping
-  if (voucherApplied.value) total -= 20000;
+  let total = subtotal.value;
+  // Diskon aslinya akan dihitung saat checkout setelah memilih ongkir
+  // Di sini kita hanya menampilkan total keranjang
   return total;
 });
 
@@ -468,26 +477,49 @@ const goToCheckout = () => {
 
 // ===================== ADD TO CART (recommended) =====================
 const addToCart = async (product) => {
+  const firstVariant = product.variants?.[0];
+  if (!firstVariant) {
+    showToastError('Produk ini belum memiliki varian.');
+    return;
+  }
   try {
-    // product recommended masih mock, jadi kita butuh variantId
-    // Untuk sementara kita coba re-fetch cart saja
-    showToastError('Fitur ini memerlukan variant_id dari backend.');
+    await cartService.addToCart(firstVariant.id, 1);
+    fetchCart();
   } catch (error) {
     // Error ditampilkan oleh service
   }
 };
 
-// ===================== RECOMMENDED (Mock) =====================
-const recommended = ref([
-  { id: 6,  brand: 'Nevada', name: 'Nevada Men Polo Sport Edition',     price: 'Rp 215.000', emoji: '🎽', bg: 'bg-blue-50'   },
-  { id: 7,  brand: 'Cole',   name: 'Cole Slim Fit Chino Pants Modern',  price: 'Rp 229.000', emoji: '👖', bg: 'bg-stone-100' },
-  { id: 8,  brand: 'Suko',   name: 'Suko Casual Hoodie Fleece Premium', price: 'Rp 219.000', emoji: '🧥', bg: 'bg-gray-100'  },
-  { id: 9,  brand: 'Lois',   name: 'Lois Classic Denim Jacket Washed',  price: 'Rp 399.000', emoji: '👔', bg: 'bg-amber-50'  },
-  { id: 10, brand: 'TZone',  name: 'TZone Chronograph Sports Watch',    price: 'Rp 679.000', emoji: '⌚', bg: 'bg-stone-100' },
-]);
+// ===================== RECOMMENDED =====================
+const recommended = ref([]);
+
+const fetchRecommendedProducts = async () => {
+  try {
+    const data = await productService.getProducts({ limit: 5 });
+    recommended.value = (data.products || []).map((p, i) => {
+      const variants = p.variants || [];
+      const prices = variants.map(v => v.price).filter(Boolean);
+      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+      
+      return {
+        id: p.id,
+        brand: p.store?.name || p.brand || 'Unknown',
+        name: p.name || 'Produk',
+        price: `Rp ${Number(minPrice).toLocaleString('id-ID')}`,
+        emoji: ['👕', '👔', '👗', '🧥', '👖', '🎽'][i % 6],
+        bg: 'bg-stone-100',
+        image_url: p.image_url,
+        variants: variants
+      };
+    });
+  } catch (error) {
+    console.error('Failed to load recommended products', error);
+  }
+};
 
 // ===================== INIT =====================
 onMounted(() => {
   fetchCart();
+  fetchRecommendedProducts();
 });
 </script>

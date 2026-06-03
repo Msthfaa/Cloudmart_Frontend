@@ -116,7 +116,9 @@ import { sellerFeaturesService } from '../../services/sellerFeatures';
 import { showToastSuccess, showToastError } from '../../services/api';
 import DataTable from '../../components/admin/DataTable.vue';
 import Swal from 'sweetalert2';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const products = ref([]);
 const loading = ref(true);
 
@@ -164,8 +166,7 @@ const handlePageChange = (page) => {
 };
 
 const handleEdit = (id) => {
-  console.log("Edit ID:", id);
-  // router.push(`/admin/products/edit/${id}`);
+  router.push(`/admin/products/edit/${id}`);
 };
 
 const handleDelete = async (id) => {

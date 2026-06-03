@@ -201,6 +201,11 @@ const submitForm = async () => {
     const payload = { ...form.value };
     if (!payload.max) payload.max = 0; // Ensure max is present
     
+    // Konversi ke format RFC3339 agar BE bisa mem-parsing sebagai time.Time
+    if (payload.expired_at && payload.expired_at.length === 10) {
+      payload.expired_at = payload.expired_at + 'T23:59:59Z';
+    }
+    
     if (isEdit.value) {
       await sellerFeaturesService.updateVoucher(editId.value, payload);
       showToastSuccess('Voucher berhasil diperbarui');

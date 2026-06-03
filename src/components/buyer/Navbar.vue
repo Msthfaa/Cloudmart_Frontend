@@ -62,9 +62,6 @@
                 <router-link to="/orders" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                   📦 Pesanan Saya
                 </router-link>
-                <router-link to="/admin/login" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                  👨‍💼 Seller Center
-                </router-link>
                 <div class="border-t border-gray-100 my-1"></div>
                 <button @click="handleLogout" class="w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                   🚪 Keluar
@@ -81,9 +78,6 @@
                 </router-link>
                 <router-link to="/orders" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                   📦 Pesanan Saya
-                </router-link>
-                <router-link to="/admin/login" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                  👨‍💼 Seller Center
                 </router-link>
               </template>
             </div>

@@ -43,6 +43,15 @@
         </router-link>
 
         <router-link 
+          to="/admin/reviews" 
+          class="flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
+          exact-active-class="bg-blue-600 text-white shadow-md shadow-blue-200 font-bold"
+        >
+          <span class="text-lg">💬</span> 
+          <span class="text-sm">Ulasan Pembeli</span>
+        </router-link>
+
+        <router-link 
           to="/admin/vouchers" 
           class="flex items-center space-x-3 p-3 rounded-xl transition-all duration-300 text-slate-500 hover:bg-blue-50"
           exact-active-class="bg-blue-600 text-white shadow-md shadow-blue-200 font-bold"

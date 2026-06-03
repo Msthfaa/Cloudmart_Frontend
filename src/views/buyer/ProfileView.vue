@@ -5,8 +5,15 @@
       <!-- Profile Sidebar -->
       <div class="md:col-span-1">
         <div class="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center sticky top-24">
-          <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-400 flex items-center justify-center text-white text-3xl font-bold mb-4 shadow-lg shadow-blue-200">
-            {{ getInitials(profile?.name) }}
+          <div class="relative group">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-400 flex items-center justify-center text-white text-3xl font-bold mb-4 shadow-lg shadow-blue-200 overflow-hidden">
+              <img v-if="profile?.avatar_url" :src="profile.avatar_url" alt="Avatar" class="w-full h-full object-cover" />
+              <span v-else>{{ getInitials(profile?.name) }}</span>
+            </div>
+            <label class="absolute inset-0 flex items-center justify-center bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity mb-4">
+              <span class="text-xs font-bold">Ubah</span>
+              <input type="file" class="hidden" accept="image/*" @change="handleAvatarUpload" />
+            </label>
           </div>
           <h2 class="text-xl font-bold text-gray-800">{{ profile?.name || 'Loading...' }}</h2>
           <p class="text-sm text-gray-500 mb-6">{{ profile?.email }}</p>
@@ -204,6 +211,19 @@ const submitAddress = async () => {
     showToastError(error.message || 'Gagal menyimpan alamat');
   } finally {
     submitting.value = false;
+  }
+};
+
+const handleAvatarUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const data = await profileService.uploadAvatar(file);
+    profile.value.avatar_url = data.url;
+    showToastSuccess('Avatar berhasil diperbarui');
+  } catch (error) {
+    showToastError(error.message || 'Gagal mengunggah avatar');
   }
 };
 

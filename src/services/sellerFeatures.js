@@ -69,6 +69,20 @@ export const sellerFeaturesService = {
       throw new Error(getErrorMessage(error));
     }
   },
+  async uploadProductImage(id, file) {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const response = await api.post(`/seller/products/${id}/image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
 
   // ===================== VARIANTS =====================
   async getVariants(productId) {
@@ -98,6 +112,52 @@ export const sellerFeaturesService = {
   async deleteVariant(variantId) {
     try {
       const response = await api.delete(`/seller/variants/${variantId}`);
+      return response.data.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+  async uploadVariantImage(id, file) {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const response = await api.post(`/seller/variants/${id}/image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+
+  // ===================== STORE =====================
+  async getStore() {
+    try {
+      const response = await api.get('/seller/store');
+      return response.data.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+  async updateStore(data) {
+    try {
+      const response = await api.put('/seller/store', data);
+      return response.data.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error));
+    }
+  },
+  async uploadStoreLogo(file) {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const response = await api.post(`/seller/store/logo`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       return response.data.data;
     } catch (error) {
       throw new Error(getErrorMessage(error));

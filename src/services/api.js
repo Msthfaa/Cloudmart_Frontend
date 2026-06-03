@@ -36,8 +36,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
         try {
-          // Coba refresh token
-          const { data } = await axios.post('/api/login', {
+          const { data } = await axios.post('/api/refresh', {
             refresh_token: refreshToken,
           });
           const responseData = data.data; // Backend membungkus di dalam properti `data`

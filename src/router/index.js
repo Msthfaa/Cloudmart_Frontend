@@ -25,11 +25,13 @@ import ProductsView from '../views/seller/Product.vue';
 import OrderView from '../views/seller/Order.vue';
 import TokoView from '../views/seller/SettingToko.vue';
 import AddProduct from '../views/seller/AddProduct.vue';
+import EditProduct from '../views/seller/EditProduct.vue';
 import CategoriesView from '../views/seller/Categories.vue';
 import VariantsView from '../views/seller/Variants.vue';
 import VouchersView from '../views/seller/Vouchers.vue';
 import LogisticsView from '../views/seller/Logistics.vue';
 import PaymentConfigsView from '../views/seller/PaymentConfigs.vue';
+import ReviewsView from '../views/seller/Reviews.vue';
 
 const routes = [
   // ── AREA PUBLIC (Buyer / Toko Depan) ──────────────────────────
@@ -66,11 +68,13 @@ const routes = [
       { path: 'dashboard',    name: 'AdminDashboard', component: DashboardView },
       { path: 'products',     name: 'AdminProducts',  component: ProductsView },
       { path: 'products/add', name: 'AddProduct',     component: AddProduct },
+      { path: 'products/edit/:id', name: 'EditProduct', component: EditProduct },
       { path: 'products/:id/variants', name: 'AdminVariants', component: VariantsView },
       { path: 'orders',       name: 'AdminOrders',    component: OrderView },
       { path: 'setting',      name: 'settingToko',    component: TokoView },
       { path: 'categories',   name: 'AdminCategories', component: CategoriesView },
       { path: 'vouchers',     name: 'AdminVouchers',  component: VouchersView },
+      { path: 'reviews',      name: 'AdminReviews',   component: ReviewsView },
       { path: 'logistics',    name: 'AdminLogistics', component: LogisticsView },
       { path: 'payment-configs', name: 'AdminPaymentConfigs', component: PaymentConfigsView },
     ],
@@ -87,10 +91,17 @@ const router = createRouter({
 // ===================== ROUTE GUARD =====================
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('access_token');
+  const userRole = localStorage.getItem('user_role');
 
   // Admin routes — butuh token
-  if (to.matched.some(record => record.meta.requiresAuth) && !token) {
-    next('/admin/login');
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!token) {
+      next('/admin/login');
+    } else if (userRole !== 'seller' && userRole !== 'SELLER') {
+      next('/'); // Redirect to home if not seller (blocks null or customer)
+    } else {
+      next();
+    }
   }
   // Buyer routes — butuh login
   else if (to.matched.some(record => record.meta.requiresBuyer) && !token) {

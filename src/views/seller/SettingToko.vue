@@ -27,8 +27,15 @@
               </div>
             </div>
             <div class="flex flex-col items-center justify-center border-2 border-dashed border-blue-100 rounded-[2rem] bg-blue-50/20 p-6">
-              <div class="w-32 h-32 bg-white rounded-3xl shadow-inner mb-4 flex items-center justify-center text-4xl">🛒</div>
-              <button class="text-blue-600 font-bold text-xs hover:underline">Ganti Logo</button>
+              <div class="w-32 h-32 bg-white rounded-3xl shadow-inner mb-4 flex items-center justify-center text-4xl overflow-hidden relative group">
+                <img v-if="store.logo" :src="store.logo" alt="Logo Toko" class="w-full h-full object-cover">
+                <span v-else>🛒</span>
+                <label class="absolute inset-0 bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity text-xs font-bold">
+                  Ubah
+                  <input type="file" accept="image/*" class="hidden" @change="handleLogoUpload">
+                </label>
+              </div>
+              <button class="text-blue-600 font-bold text-xs hover:underline cursor-pointer" onclick="document.querySelector('input[type=file]').click()">Ganti Logo</button>
             </div>
           </div>
         </section>
@@ -87,12 +94,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import Swal from 'sweetalert2';
+import { sellerFeaturesService } from '../../services/sellerFeatures';
 
 const store = ref({
-  name: 'The Editorial Merchant',
-  description: 'Kurasi produk fashion dan gaya hidup kelas atas dengan fokus pada kualitas kerajinan tangan dan desain kontemporer yang baik.'
+  name: '',
+  description: '',
+  logo: ''
 });
 
 const couriers = ref([
@@ -100,6 +109,38 @@ const couriers = ref([
   { name: 'Sicepat Gokil', active: true },
   { name: 'Gosend / Grab', active: true },
 ]);
+
+const fetchStore = async () => {
+  try {
+    const data = await sellerFeaturesService.getStore();
+    if (data) {
+      store.value.name = data.name || '';
+      store.value.logo = data.logo_url || ''; // assuming backend returns logo_url
+    }
+  } catch (error) {
+    console.error("Gagal load store:", error);
+  }
+};
+
+const handleLogoUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const data = await sellerFeaturesService.uploadStoreLogo(file);
+    store.value.logo = data.url;
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Logo toko berhasil diperbarui',
+      showConfirmButton: false,
+      timer: 3000
+    });
+  } catch (error) {
+    Swal.fire('Gagal!', error.message || 'Gagal mengunggah logo', 'error');
+  }
+};
 
 const saveChanges = () => {
   Swal.fire({
@@ -109,10 +150,19 @@ const saveChanges = () => {
     showCancelButton: true,
     confirmButtonColor: '#1e293b',
     confirmButtonText: 'Ya, Simpan!'
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
-      Swal.fire('Berhasil!', 'Pengaturan telah disimpan.', 'success');
+      try {
+        await sellerFeaturesService.updateStore({ name: store.value.name });
+        Swal.fire('Berhasil!', 'Pengaturan telah disimpan.', 'success');
+      } catch (error) {
+        Swal.fire('Gagal!', error.message || 'Gagal menyimpan perubahan', 'error');
+      }
     }
   });
 };
+
+onMounted(() => {
+  fetchStore();
+});
 </script>
