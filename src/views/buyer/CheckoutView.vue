@@ -353,7 +353,7 @@ const fetchData = async () => {
       const logistics = await logisticService.getLogistics();
       const methods = [];
       logistics.forEach(log => {
-        if (log.services) {
+        if (log.services && log.services.length > 0) {
           log.services.forEach(srv => {
             methods.push({
               id: srv.id,
@@ -361,6 +361,14 @@ const fetchData = async () => {
               priceValue: srv.base_price,
               price: formatRupiah(srv.base_price)
             });
+          });
+        } else {
+          // Fallback if log.services is missing/empty
+          methods.push({
+            id: log.id,
+            name: log.name,
+            priceValue: log.base_price || log.price || 10000,
+            price: formatRupiah(log.base_price || log.price || 10000)
           });
         }
       });
@@ -422,10 +430,12 @@ const fetchEstimate = async () => {
 };
 
 const applyVoucher = async () => {
-  if (!voucherCode.value) return;
+  const code = voucherCode.value.trim().toUpperCase();
+  if (!code) return;
   try {
-    await voucherService.claimVoucher(voucherCode.value);
+    await voucherService.claimVoucher(code);
     voucherApplied.value = true;
+    voucherCode.value = code; // Update back the formatted value
     if (currentStep.value >= 2) {
       await fetchEstimate();
     }

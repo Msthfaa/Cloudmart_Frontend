@@ -83,7 +83,7 @@
             <!-- Seller header -->
             <div class="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100">
               <span class="text-base">🏪</span>
-              <span class="text-sm font-bold text-gray-700">Cloudmart Official Store</span>
+              <span class="text-sm font-bold text-gray-700">{{ cartItems.length > 0 ? (cartItems[0].brand || 'Cloudmart Store') : 'Cloudmart Store' }}</span>
               <span class="ml-auto text-[11px] text-blue-500 font-semibold cursor-pointer hover:underline">Kunjungi Toko →</span>
             </div>
 
@@ -433,9 +433,10 @@ const voucherApplied = ref(false);
 import { voucherService } from '../../services/voucher';
 
 const applyVoucher = async () => {
-  if (voucherCode.value.trim()) {
+  const code = voucherCode.value.trim().toUpperCase();
+  if (code) {
     try {
-      await voucherService.claimVoucher(voucherCode.value);
+      await voucherService.claimVoucher(code);
       voucherApplied.value = true;
     } catch {
       voucherApplied.value = false;

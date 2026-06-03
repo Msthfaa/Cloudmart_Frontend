@@ -461,7 +461,14 @@ const fetchProduct = async () => {
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
 
-    const variantImages = variants.map(v => v.image_url).filter(Boolean);
+    const variantImages = variants
+      .map(v => {
+        if (v.images && v.images.length > 0) {
+          return v.images[0].image_url || v.images[0].imageUrl;
+        }
+        return v.image_url || v.imageUrl;
+      })
+      .filter(Boolean);
     const allImages = [];
     if (data.image_url) allImages.push({ url: data.image_url, emoji: null });
     variantImages.forEach(url => {

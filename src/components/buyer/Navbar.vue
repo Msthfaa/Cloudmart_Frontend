@@ -62,6 +62,10 @@
                 <router-link to="/orders" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                   📦 Pesanan Saya
                 </router-link>
+                <div v-if="userRole === 'seller'" class="border-t border-gray-100 my-1"></div>
+                <router-link v-if="userRole === 'seller'" to="/admin" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                  🏬 Dashboard Penjual
+                </router-link>
                 <div class="border-t border-gray-100 my-1"></div>
                 <button @click="handleLogout" class="w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                   🚪 Keluar
@@ -165,6 +169,7 @@ const searchQuery = ref('');
 const cartCount = ref(0);
 const isLoggedIn = ref(false);
 const userName = ref('');
+const userRole = ref('');
 
 // ===================== FETCH CART COUNT =====================
 const fetchCartCount = async () => {
@@ -187,6 +192,7 @@ const fetchProfile = async () => {
     const data = await authService.getProfile();
     isLoggedIn.value = true;
     userName.value = data.name || data.email || 'User';
+    userRole.value = data.store ? 'seller' : (data.role ? data.role.toLowerCase() : (localStorage.getItem('user_role') || 'buyer'));
   } catch (error) {
     isLoggedIn.value = false;
   }

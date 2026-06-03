@@ -205,6 +205,9 @@ const fetchInitialData = async () => {
         if (v.images && v.images.length > 0) {
           vImg = v.images[0].image_url || v.images[0].imageUrl;
         }
+        if (!vImg && (v.image_url || v.imageUrl)) {
+          vImg = v.image_url || v.imageUrl;
+        }
         return {
           id: v.id, // ID marks it as existing
           sku: v.sku,

@@ -203,7 +203,8 @@
         >
           <div class="relative aspect-square rounded-2xl mb-3 overflow-hidden flex items-center justify-center text-5xl transition-shadow group-hover:shadow-xl"
                :class="product.bgColor">
-            {{ product.emoji }}
+            <img v-if="product.image_url" :src="product.image_url" class="w-full h-full object-cover" />
+            <span v-else>{{ product.emoji }}</span>
             <div class="absolute top-2.5 left-2.5 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow">
               -{{ product.discount }}%
             </div>

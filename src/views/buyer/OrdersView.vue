@@ -58,7 +58,7 @@
           <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white">
             <div class="flex items-center gap-3">
               <span class="text-lg">🏪</span>
-              <span class="text-sm font-bold text-gray-800">Cloudmart Official Store</span>
+              <span class="text-sm font-bold text-gray-800">{{ order.items[0]?.brand || 'Toko' }}</span>
               <span class="text-gray-300">|</span>
               <span class="text-xs text-gray-500">{{ order.date }}</span>
               <span class="text-gray-300">|</span>

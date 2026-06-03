@@ -25,7 +25,7 @@
             </div>
             <div class="flex items-center gap-3 text-sm text-gray-600">
               <span class="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center">🛡️</span>
-              <span class="capitalize">{{ profile?.role || 'User' }}</span>
+              <span class="capitalize">{{ profile?.store ? 'seller' : (profile?.role || 'User') }}</span>
             </div>
           </div>
         </div>
