@@ -362,14 +362,6 @@ const fetchData = async () => {
               price: formatRupiah(srv.base_price)
             });
           });
-        } else {
-          // Fallback if log.services is missing/empty
-          methods.push({
-            id: log.id,
-            name: log.name,
-            priceValue: log.base_price || log.price || 10000,
-            price: formatRupiah(log.base_price || log.price || 10000)
-          });
         }
       });
       shippingMethods.value = methods;
