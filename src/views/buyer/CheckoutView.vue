@@ -283,7 +283,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { authService } from '../../services/auth';
 import { cartService } from '../../services/cart';
 import { orderService } from '../../services/order';
@@ -292,6 +292,7 @@ import { voucherService } from '../../services/voucher';
 import { showToastError, showToastSuccess } from '../../services/api';
 import Swal from 'sweetalert2';
 
+const route = useRoute();
 const router = useRouter();
 
 const currentStep = ref(1);
@@ -303,6 +304,7 @@ const placingOrder = ref(false);
 // ===================== CART DATA =====================
 const cartItems = ref([]);
 const cartSubtotal = ref(0);
+const cartItemIDs = ref([]);
 
 // ===================== ADDRESSES =====================
 const savedAddresses = ref([]);
@@ -324,6 +326,11 @@ const shippingMethods = ref([]);
 const fetchData = async () => {
   loading.value = true;
   try {
+    // Parse cart_item_ids from query
+    if (route.query.items) {
+      cartItemIDs.value = route.query.items.split(',').map(id => Number(id)).filter(id => !isNaN(id));
+    }
+
     // Fetch profile
     const profile = await authService.getProfile();
     form.value.email = profile.email || '';
@@ -342,8 +349,13 @@ const fetchData = async () => {
     // Fetch cart
     try {
       const cart = await cartService.getCart();
-      cartSubtotal.value = cart.grand_total || 0;
-      cartItems.value = cart.items || [];
+      if (cartItemIDs.value.length > 0) {
+        cartItems.value = (cart.items || []).filter(item => cartItemIDs.value.includes(item.id));
+        cartSubtotal.value = cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      } else {
+        cartItems.value = cart.items || [];
+        cartSubtotal.value = cart.grand_total || 0;
+      }
     } catch {
       cartItems.value = [];
     }
@@ -414,7 +426,7 @@ const totalAmount = computed(() => {
 const fetchEstimate = async () => {
   if (!form.value.shippingMethod) return;
   try {
-    const res = await orderService.estimateOrder(form.value.shippingMethod, voucherApplied.value ? voucherCode.value : '');
+    const res = await orderService.estimateOrder(form.value.shippingMethod, voucherApplied.value ? voucherCode.value : '', cartItemIDs.value);
     estimateData.value = res;
   } catch {
     estimateData.value = null;
@@ -460,7 +472,7 @@ const placeOrder = async () => {
     }
     const addressString = `${addr.recipient}, ${addr.phone}, ${addr.address}, ${addr.city}, ${addr.state}, ${addr.country} ${addr.postal_code}`.trim();
 
-    const order = await orderService.checkout(addressString, form.value.shippingMethod, voucherCode.value);
+    const order = await orderService.checkout(addressString, form.value.shippingMethod, voucherCode.value, cartItemIDs.value);
 
     if (form.value.paymentMethod === 'midtrans' && order && order.id) {
       const paymentInfo = await orderService.initiatePayment(order.id);

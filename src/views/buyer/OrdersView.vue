@@ -76,10 +76,11 @@
           <div class="p-6 cursor-pointer group" @click="$router.push(`/orders/${order.id}`)">
             <div class="flex items-start gap-5">
               <div 
-                class="w-20 h-20 rounded-xl flex items-center justify-center text-3xl shrink-0 border border-gray-100 transition-transform group-hover:scale-105"
-                :class="order.items[0].bg"
+                class="w-20 h-20 rounded-xl flex items-center justify-center text-3xl shrink-0 border border-gray-100 transition-transform group-hover:scale-105 overflow-hidden"
+                :class="!order.items[0].image ? order.items[0].bg : 'bg-white'"
               >
-                {{ order.items[0].emoji }}
+                <img v-if="order.items[0].image" :src="order.items[0].image" :alt="order.items[0].name" class="w-full h-full object-cover" />
+                <template v-else>{{ order.items[0].emoji }}</template>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">{{ order.items[0].brand }}</p>
@@ -320,15 +321,16 @@ const fetchOrders = async () => {
         items: items.length > 0
           ? items.map(item => ({
               id: item.id || item.order_item_id,
-              productId: item.product_id || null,
-              brand: item.brand || '',
-              name: item.name || item.variant_name || 'Produk',
-              variant: item.variant_name || '',
+              productId: item.variant?.product_id || null,
+              brand: item.variant?.product?.store?.name || 'Toko',
+              name: item.variant?.product?.name || item.variant_details || 'Produk',
+              variant: item.variant ? `${item.variant.color} - ${item.variant.size}` : item.variant_details,
               qty: item.quantity || 1,
+              image: item.variant?.image_url || item.variant?.product?.image_url || '',
               emoji: '📦',
               bg: 'bg-gray-100',
             }))
-          : [{ productId: null, brand: '', name: 'Order Item', variant: '-', qty: 1, emoji: '📦', bg: 'bg-gray-100' }],
+          : [{ productId: null, brand: '', name: 'Order Item', variant: '-', qty: 1, image: '', emoji: '📦', bg: 'bg-gray-100' }],
       };
     });
   } catch (error) {

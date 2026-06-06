@@ -107,7 +107,7 @@ const orders = computed(() => {
       orderId: `#ORD-${o.id}`,
       date: d.toLocaleDateString('id-ID'),
       time: d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-      customer: `User ID: ${o.user_id}`,
+      customer: o.user && o.user.name ? o.user.name : `User ID: ${o.user_id}`,
       total: 'Rp ' + Number(o.grand_total).toLocaleString('id-ID'),
       paymentStatusRaw: o.payment_status,
       paymentStatus: o.payment_status === 'settlement' || o.payment_status === 'paid' ? 'Dibayar' : 'Menunggu',

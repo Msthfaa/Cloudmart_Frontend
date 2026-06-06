@@ -629,8 +629,12 @@ const buyNow = async () => {
   }
   addingToCart.value = true;
   try {
-    await cartService.addToCart(selectedVariant.value.id, qty.value);
-    router.push('/checkout');
+    const res = await cartService.addToCart(selectedVariant.value.id, qty.value);
+    if (res && res.cart_id) {
+      router.push({ path: '/checkout', query: { items: res.cart_id } });
+    } else {
+      router.push('/checkout');
+    }
   } catch (error) {
     // Error ditampilkan oleh service
   } finally {

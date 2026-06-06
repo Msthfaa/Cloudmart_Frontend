@@ -29,8 +29,10 @@
                 </button>
               </div>
             </div>
-            <!-- Hero Image/Emoji -->
-            <div class="text-[9rem] select-none opacity-80 hidden md:block">{{ slide.emoji }}</div>
+            <!-- Hero Image/Icon -->
+            <div class="text-[9rem] opacity-80 hidden md:flex items-center justify-center">
+              <component :is="slide.icon" class="w-48 h-48 text-gray-800 stroke-[1]" />
+            </div>
           </div>
         </div>
       </div>
@@ -68,7 +70,7 @@
         <!-- Large Left Promo -->
         <div class="relative flex-1 rounded-2xl overflow-hidden flex flex-col justify-end p-7 bg-gradient-to-br from-gray-800 to-gray-950 cursor-pointer group">
           <div class="absolute inset-0 transition-transform duration-500 group-hover:scale-105 flex items-center justify-end pr-8">
-            <span class="text-[7rem] opacity-20 select-none">👗</span>
+            <component :is="largePromoIcon" class="w-32 h-32 opacity-20 text-white" />
           </div>
           <div class="relative z-10">
             <span class="inline-block bg-green-400/20 text-green-300 text-xs font-bold px-2.5 py-1 rounded-full mb-2 border border-green-400/30">New Arrivals</span>
@@ -95,7 +97,9 @@
               <p class="text-xs text-gray-500">{{ promo.sub }}</p>
             </div>
             <a href="#" class="text-xs font-bold text-blue-500 hover:text-blue-700 transition-colors">Shop now →</a>
-            <div class="absolute right-3 bottom-3 text-5xl opacity-20 group-hover:opacity-30 group-hover:scale-110 transition-all select-none">{{ promo.emoji }}</div>
+            <div class="absolute right-3 bottom-3 opacity-20 group-hover:opacity-30 group-hover:scale-110 transition-all">
+              <component :is="promo.icon" class="w-12 h-12 text-gray-900" />
+            </div>
           </div>
         </div>
 
@@ -130,9 +134,9 @@
           class="group cursor-pointer"
           @click="$router.push(`/product/${product.id}`)"
         >
-          <div class="aspect-square rounded-2xl mb-3 overflow-hidden flex items-center justify-center text-5xl transition-shadow group-hover:shadow-xl bg-stone-100">
+          <div class="aspect-square rounded-2xl mb-3 overflow-hidden flex items-center justify-center transition-shadow group-hover:shadow-xl bg-stone-100">
             <img v-if="product.image_url" :src="product.image_url" class="w-full h-full object-cover" />
-            <span v-else>📦</span>
+            <component v-else :is="product.icon" class="w-16 h-16 text-gray-300 stroke-[1.5]" />
           </div>
           <p class="text-[10px] text-gray-400 uppercase tracking-widest font-medium">{{ product.category?.name || 'Category' }}</p>
           <p class="text-sm text-gray-800 font-medium leading-snug mt-0.5 line-clamp-2">{{ product.name }}</p>
@@ -201,10 +205,10 @@
           :key="product.id"
           class="group cursor-pointer"
         >
-          <div class="relative aspect-square rounded-2xl mb-3 overflow-hidden flex items-center justify-center text-5xl transition-shadow group-hover:shadow-xl"
+          <div class="relative aspect-square rounded-2xl mb-3 overflow-hidden flex items-center justify-center transition-shadow group-hover:shadow-xl"
                :class="product.bgColor">
             <img v-if="product.image_url" :src="product.image_url" class="w-full h-full object-cover" />
-            <span v-else>{{ product.emoji }}</span>
+            <component v-else :is="product.icon" class="w-16 h-16 text-gray-500 stroke-[1.5]" />
             <div class="absolute top-2.5 left-2.5 bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow">
               -{{ product.discount }}%
             </div>
@@ -233,7 +237,7 @@
           class="group relative rounded-2xl overflow-hidden cursor-pointer aspect-[3/4] flex items-center justify-center"
           :class="item.bg"
         >
-          <span class="text-[5rem] select-none">{{ item.emoji }}</span>
+          <component :is="item.icon" class="w-24 h-24 text-gray-700 stroke-1" />
           <!-- Overlay on hover -->
           <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300"></div>
           <div class="absolute bottom-0 left-0 right-0 bg-white/95 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
@@ -248,9 +252,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 import { productService } from '../../services/product';
+import { 
+  Shirt, Laptop, Smartphone, Tv, Watch, Speaker, ShoppingBag, 
+  Store, Package, Footprints, Briefcase, Glasses, Diamond, Tag, Crown
+} from 'lucide-vue-next';
 
 const router = useRouter();
 
@@ -260,8 +268,96 @@ const dynamicProducts = ref([]);
 const allProducts = ref([]);
 const flashProducts = ref([]);
 
+// Dynamic states
+const heroSlides = shallowRef([]);
+const promoCards = shallowRef([]);
+const bestChoices = shallowRef([]);
+const largePromoIcon = shallowRef(Shirt);
+
+const getCategoryIcon = (name = '') => {
+  if (!name) return Package;
+  const n = name.toLowerCase();
+  if (n.includes('fashion') || n.includes('baju') || n.includes('pakaian')) return Shirt;
+  if (n.includes('elektronik') || n.includes('laptop') || n.includes('komputer')) return Laptop;
+  if (n.includes('hp') || n.includes('handphone') || n.includes('smartphone')) return Smartphone;
+  if (n.includes('tv') || n.includes('televisi')) return Tv;
+  if (n.includes('jam') || n.includes('watch')) return Watch;
+  if (n.includes('audio') || n.includes('speaker')) return Speaker;
+  if (n.includes('tas') || n.includes('bag')) return Briefcase;
+  if (n.includes('sepatu') || n.includes('sandal')) return Footprints;
+  if (n.includes('kacamata') || n.includes('glass')) return Glasses;
+  if (n.includes('aksesoris') || n.includes('accessories')) return Diamond;
+  return ShoppingBag;
+};
+
 const loadProducts = async () => {
   try {
+    // 1. Fetch Categories for dynamic Icons & Promos
+    let categories = [];
+    try {
+      const catsRes = await productService.getCategories();
+      categories = catsRes || [];
+    } catch (e) {
+      console.warn('Failed to load categories', e);
+    }
+    
+    // Default categories if API fails or is empty
+    if (categories.length === 0) {
+      categories = [
+        { id: 1, name: "Men's Fashion" },
+        { id: 2, name: "Women's Style" },
+        { id: 3, name: "Accessories" },
+        { id: 4, name: "Sneakers" }
+      ];
+    }
+
+    // Populate Hero Slides Dynamically
+    heroSlides.value = [
+      {
+        subTitle: 'Season Sale',
+        title: categories[0]?.name || "Man's Fashion",
+        desc: 'Min. 35–70% Off — Koleksi terbaik pria pilihan editor',
+        bg: 'bg-gradient-to-r from-stone-100 to-stone-200',
+        icon: getCategoryIcon(categories[0]?.name || 'fashion'),
+      },
+      {
+        subTitle: 'New Arrivals',
+        title: categories[1]?.name || "Women's Style",
+        desc: 'Up to 70% Off — Tren terkini untuk wanita modern',
+        bg: 'bg-gradient-to-r from-rose-50 to-pink-100',
+        icon: getCategoryIcon(categories[1]?.name || 'baju'),
+      },
+      {
+        subTitle: 'Flash Deals',
+        title: categories[2]?.name || 'Kids Collection',
+        desc: 'Mulai dari Rp 49.000 — Nyaman & lucu untuk si kecil',
+        bg: 'bg-gradient-to-r from-sky-50 to-blue-100',
+        icon: getCategoryIcon(categories[2]?.name || 'bag'),
+      },
+    ];
+
+    // Populate Promo Cards
+    const promoBg = ['bg-amber-50', 'bg-stone-100', 'bg-amber-100', 'bg-stone-200'];
+    promoCards.value = categories.slice(0, 4).map((cat, i) => ({
+      category: cat.name,
+      title: 'Top Products',
+      sub: `Min. ${15 + i*5}% off`,
+      discount: i % 2 === 0 ? `${15 + i*5}% OFF` : null,
+      bg: promoBg[i % promoBg.length],
+      icon: getCategoryIcon(cat.name)
+    }));
+
+    // Populate Best Choices
+    const choiceBg = ['bg-stone-200', 'bg-amber-100', 'bg-sky-100', 'bg-orange-100'];
+    bestChoices.value = categories.slice(0, 4).map((cat, i) => ({
+      id: cat.id,
+      bg: choiceBg[i % choiceBg.length],
+      icon: getCategoryIcon(cat.name),
+      title: cat.name,
+      sub: 'Shop Collection →'
+    }));
+
+    // 2. Fetch Products
     const res = await productService.getProducts({ limit: 20 });
     const fetched = res.products || [];
 
@@ -280,7 +376,7 @@ const loadProducts = async () => {
         originalPriceFormatted: `Rp ${Number(minPrice * 1.3).toLocaleString('id-ID')}`,
         rating: 4.5,
         reviews: Math.floor(Math.random() * 500) + 50,
-        emoji: ['👕', '👔', '👗', '🧥', '👖', '🎽', '🎒', '👜', '👟'][idx % 9],
+        icon: getCategoryIcon(p.category?.name),
         bgColor: 'bg-stone-100',
         image_url: p.image_url,
         category: p.category,
@@ -288,16 +384,16 @@ const loadProducts = async () => {
       };
     };
 
-    // 1. Featured Products (first 5)
+    // Featured Products (first 5)
     dynamicProducts.value = fetched.slice(0, 5).map((p, i) => mapProduct(p, i));
 
-    // 2. All Products for Tabs (next 15)
+    // All Products for Tabs (next 15)
     const tabs = ['New Arrival', 'Best Selling', 'Top Rated'];
     allProducts.value = fetched.map((p, i) => mapProduct(p, i, {
       tab: tabs[i % 3]
     }));
 
-    // 3. Flash Sale (first 5, with discount)
+    // Flash Sale (first 5, with discount)
     flashProducts.value = fetched.slice(0, 5).map((p, i) => {
       const mapped = mapProduct(p, i);
       const discount = 20 + (i * 5); // 20%, 25%, etc.
@@ -316,44 +412,13 @@ const loadProducts = async () => {
 
 // ======================== HERO CAROUSEL ========================
 const currentSlide = ref(0);
-const heroSlides = [
-  {
-    subTitle: 'Season Sale',
-    title: "Man's Fashion",
-    desc: 'Min. 35–70% Off — Koleksi terbaik pria pilihan editor',
-    bg: 'bg-gradient-to-r from-stone-100 to-stone-200',
-    emoji: '🧥',
-  },
-  {
-    subTitle: 'New Arrivals',
-    title: "Women's Style",
-    desc: 'Up to 70% Off — Tren terkini untuk wanita modern',
-    bg: 'bg-gradient-to-r from-rose-50 to-pink-100',
-    emoji: '👗',
-  },
-  {
-    subTitle: 'Flash Deals',
-    title: 'Kids Collection',
-    desc: 'Mulai dari Rp 49.000 — Nyaman & lucu untuk si kecil',
-    bg: 'bg-gradient-to-r from-sky-50 to-blue-100',
-    emoji: '🎒',
-  },
-];
 
-const nextSlide = () => { currentSlide.value = (currentSlide.value + 1) % heroSlides.length; };
-const prevSlide = () => { currentSlide.value = (currentSlide.value - 1 + heroSlides.length) % heroSlides.length; };
+const nextSlide = () => { if (heroSlides.value.length) currentSlide.value = (currentSlide.value + 1) % heroSlides.value.length; };
+const prevSlide = () => { if (heroSlides.value.length) currentSlide.value = (currentSlide.value - 1 + heroSlides.value.length) % heroSlides.value.length; };
 
 let slideInterval;
 onMounted(() => { slideInterval = setInterval(nextSlide, 4000); });
 onUnmounted(() => clearInterval(slideInterval));
-
-// ======================== PROMO CARDS ========================
-const promoCards = [
-  { category: 'Accessories', title: 'Handbag', sub: 'Min. 15% off', discount: '15% OFF', bg: 'bg-amber-50', emoji: '👜' },
-  { category: 'Accessories', title: 'Handbag', sub: 'Koleksi terbaru', discount: '20% OFF', bg: 'bg-stone-100', emoji: '👛' },
-  { category: 'Accessories', title: 'Backpack', sub: 'Min. 30–55% off', discount: null, bg: 'bg-amber-100', emoji: '🎒' },
-  { category: 'Accessories', title: 'Watches', sub: 'Min. 25% off', discount: null, bg: 'bg-stone-200', emoji: '⌚' },
-];
 
 // ======================== FEATURED PRODUCTS ========================
 const productTabs = ['New Arrival', 'Best Selling', 'Top Rated'];
@@ -364,14 +429,6 @@ const filteredProducts = computed(() => allProducts.value.filter(p => p.tab === 
 // ======================== BRANDS ========================
 const brandsList = ['Nevada', 'Cole', 'Suko', "Gab's", 'Lois', 'Walrus', 'TZone', 'Polo', 'Eiger', 'Erigo', 'Uniqlo', 'H&M', 'Adidas', 'Nike', 'Vans', 'Zara'];
 const brands = brandsList.map((name, i) => ({ id: i + 1, name, initial: name[0].toUpperCase() }));
-
-// ======================== BEST CHOICE ========================
-const bestChoices = [
-  { id: 1, bg: 'bg-stone-200', emoji: '🕶️', title: 'Casual Outfit for Men', sub: 'Shop Collection →' },
-  { id: 2, bg: 'bg-amber-100', emoji: '👗', title: 'Best Collection Women', sub: 'Shop Collection →' },
-  { id: 3, bg: 'bg-sky-100', emoji: '👟', title: 'Sneakers for Kids', sub: 'Shop Collection →' },
-  { id: 4, bg: 'bg-orange-100', emoji: '🧥', title: 'Best Outwear for Men', sub: 'Shop Collection →' },
-];
 
 // ======================== COUNTDOWN TIMER ========================
 const countdownUnits = ref([

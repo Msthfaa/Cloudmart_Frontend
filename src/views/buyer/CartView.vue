@@ -473,7 +473,8 @@ const grandTotal = computed(() => {
 
 // ===================== CHECKOUT =====================
 const goToCheckout = () => {
-  router.push('/checkout');
+  if (selectedItems.value.length === 0) return;
+  router.push({ path: '/checkout', query: { items: selectedItems.value.join(',') } });
 };
 
 // ===================== ADD TO CART (recommended) =====================

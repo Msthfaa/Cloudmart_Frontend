@@ -116,7 +116,7 @@ const fetchData = async () => {
     
     recentOrders.value = sorted.slice(0, 3).map(o => ({
       id: o.id,
-      buyer: `User ${o.user_id}`,
+      buyer: o.user && o.user.name ? o.user.name : `User ${o.user_id}`,
       total: 'Rp ' + Number(o.grand_total).toLocaleString('id-ID'),
       status: o.payment_status === 'settlement' || o.payment_status === 'paid' ? 'Dibayar' : 'Menunggu',
       icon: '🛒'

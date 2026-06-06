@@ -2,12 +2,13 @@ import api, { showToastSuccess, showToastError, getErrorMessage } from './api';
 
 export const orderService = {
   // ===================== CHECKOUT =====================
-  async checkout(addressString, logisticServiceId, voucherCode = '') {
+  async checkout(addressString, logisticServiceId, voucherCode = '', cartItemIDs = []) {
     try {
       const payload = {
         address: addressString,
         logistic_service_id: Number(logisticServiceId),
-        voucher_code: voucherCode
+        voucher_code: voucherCode,
+        cart_item_ids: cartItemIDs,
       };
       const { data } = await api.post('/orders/checkout', payload);
       return data.data || data;
@@ -18,11 +19,12 @@ export const orderService = {
   },
 
   // ===================== ESTIMATE ORDER =====================
-  async estimateOrder(logisticServiceId, voucherCode = '') {
+  async estimateOrder(logisticServiceId, voucherCode = '', cartItemIDs = []) {
     try {
       const payload = {
         logistic_service_id: Number(logisticServiceId),
-        voucher_code: voucherCode
+        voucher_code: voucherCode,
+        cart_item_ids: cartItemIDs,
       };
       const { data } = await api.post('/orders/estimate', payload);
       return data.data || data;
