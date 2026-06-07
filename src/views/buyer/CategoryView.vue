@@ -508,6 +508,7 @@ const fetchProducts = async () => {
     const data = await productService.getProducts({
       page: currentPage.value,
       limit: perPage,
+      search: route.query.q || '',
     });
 
     productsTotal.value = data.total || 0;
@@ -544,6 +545,11 @@ watch(currentPage, () => {
 });
 
 watch(() => route.params.slug, () => {
+  currentPage.value = 1;
+  fetchProducts();
+});
+
+watch(() => route.query.q, () => {
   currentPage.value = 1;
   fetchProducts();
 });

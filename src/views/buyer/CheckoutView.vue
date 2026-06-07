@@ -484,7 +484,7 @@ const placeOrder = async () => {
 
       if (paymentInfo.snap_token && window.snap) {
         window.snap.pay(paymentInfo.snap_token, {
-          onSuccess: () => router.push('/payment-success'),
+          onSuccess: () => router.push({ path: '/payment-success', query: { order_id: order.id } }),
           onPending: () => router.push('/orders'),
           onError: () => showToastError('Pembayaran gagal.'),
           onClose: () => router.push('/orders'),
@@ -494,7 +494,7 @@ const placeOrder = async () => {
     }
 
     // Default: redirect ke payment success
-    router.push('/payment-success');
+    router.push({ path: '/payment-success', query: { order_id: order.id } });
   } catch (error) {
     // Error ditampilkan oleh service
   } finally {

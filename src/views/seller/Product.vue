@@ -70,7 +70,7 @@
         <td class="px-8 py-5">
           <div class="flex items-center space-x-4">
             <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-xl overflow-hidden border border-slate-200">
-              <img v-if="p.images?.length" :src="p.images[0].imageUrl" class="w-full h-full object-cover">
+              <img v-if="p.image_url" :src="p.image_url" class="w-full h-full object-cover">
               <span v-else>📦</span>
             </div>
             <div>

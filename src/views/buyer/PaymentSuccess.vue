@@ -29,7 +29,10 @@
 
       <!-- Product Row -->
       <div class="flex items-center gap-4 px-6 py-5 border-b border-gray-100">
-        <div class="w-14 h-14 rounded-xl bg-stone-100 flex items-center justify-center text-2xl shrink-0">🎒</div>
+        <div class="w-14 h-14 rounded-xl bg-stone-100 flex items-center justify-center text-2xl shrink-0 overflow-hidden border border-gray-100">
+          <img v-if="order.productImage" :src="order.productImage" class="w-full h-full object-cover">
+          <span v-else>🎒</span>
+        </div>
         <div class="flex-1 min-w-0">
           <p class="text-sm font-bold text-gray-800">{{ order.productName }}</p>
           <p class="text-xs text-gray-400 mt-0.5">{{ order.variant }}</p>
@@ -84,22 +87,63 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { orderService } from '../../services/order';
+
+const route = useRoute();
+const router = useRouter();
 
 // ===================== ORDER DATA =====================
-// TODO: Get from route state or axios.get(`/api/v1/orders/${orderId}`)
 const order = ref({
-  email: 'contohemail@hmail.com',
-  productName: 'Nevada Ransel Backpack Elegan',
-  variant: 'Brown / 18 INCH',
-  productPrice: 'Rp. 450.000,00',
-  transactionTime: new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-  paymentMethod: 'VA BCA',
-  shippingMethod: 'Shopee Express',
-  subtotal: 'Rp. 450.000,00',
-  tax: 'Rp. 50.000,00',
-  shipping: 'Free',
-  total: 'Rp. 500.000,00',
+  email: 'Loading...',
+  productName: 'Loading...',
+  variant: '',
+  productPrice: '',
+  transactionTime: '',
+  paymentMethod: '',
+  shippingMethod: '',
+  subtotal: '',
+  tax: '',
+  shipping: '',
+  total: '',
+  productImage: null,
+});
+
+onMounted(async () => {
+  const orderId = route.query.order_id;
+  if (!orderId) {
+    router.push('/');
+    return;
+  }
+  
+  try {
+    const data = await orderService.getOrderById(orderId);
+    
+    // Map data
+    const orderItems = data.order_items || [];
+    const firstItem = orderItems.length > 0 ? orderItems[0] : null;
+    const calculatedSubtotal = orderItems.reduce((acc, item) => acc + (Number(item.price) * item.quantity), 0);
+    const shippingCost = Math.max(0, (data.grand_total || 0) - calculatedSubtotal);
+    
+    order.value = {
+      email: data.user?.email || 'Pembeli',
+      productName: firstItem ? (firstItem.variant?.product?.name || 'Produk') : 'Multiple items',
+      variant: firstItem ? `${firstItem.variant?.color} / ${firstItem.variant?.size}` : '',
+      productPrice: firstItem ? `Rp ${Number(firstItem.price).toLocaleString('id-ID')}` : '',
+      transactionTime: new Date(data.created_at || Date.now()).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+      paymentMethod: data.payment_method || 'Midtrans',
+      shippingMethod: data.logistic_service || 'Reguler',
+      subtotal: `Rp ${Number(calculatedSubtotal).toLocaleString('id-ID')}`,
+      tax: 'Rp 0',
+      shipping: shippingCost > 0 ? `Rp ${Number(shippingCost).toLocaleString('id-ID')}` : 'Gratis',
+      total: `Rp ${Number(data.grand_total || 0).toLocaleString('id-ID')}`,
+      productImage: firstItem ? (firstItem.variant?.image_url || firstItem.variant?.product?.image_url) : null,
+    };
+  } catch (err) {
+    console.error('Failed to load order', err);
+    router.push('/');
+  }
 });
 </script>
 

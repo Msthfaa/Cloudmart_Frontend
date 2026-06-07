@@ -104,10 +104,11 @@
               <!-- Product Image -->
               <router-link :to="`/product/${item.productId}`" class="shrink-0">
                 <div
-                  class="w-20 h-20 rounded-xl flex items-center justify-center text-3xl border border-gray-100"
+                  class="w-20 h-20 rounded-xl flex items-center justify-center text-3xl border border-gray-100 overflow-hidden"
                   :class="item.bgColor"
                 >
-                  {{ item.emoji }}
+                  <img v-if="item.image_url" :src="item.image_url" class="w-full h-full object-cover">
+                  <span v-else>{{ item.emoji }}</span>
                 </div>
               </router-link>
 
@@ -328,6 +329,7 @@ const fetchCart = async () => {
       subtotal: item.subtotal || 0,
       emoji: '📦',
       bgColor: 'bg-gray-100',
+      image_url: item.variant_image || item.product_image,
     }));
     // Default: select all
     selectedItems.value = cartItems.value.map(i => i.id);

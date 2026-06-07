@@ -54,4 +54,14 @@ export const orderService = {
       throw error;
     }
   },
+
+  // ===================== GET ORDER BY ID =====================
+  async getOrderById(id) {
+    try {
+      const { data } = await api.get(`/orders/${id}`);
+      return data.data || data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };

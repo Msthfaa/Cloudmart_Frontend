@@ -17,11 +17,12 @@
           <div class="flex items-center border border-gray-300 rounded-full bg-white h-10 px-4 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition">
             <input
               v-model="searchQuery"
+              @keyup.enter="handleSearch"
               type="text"
               placeholder="Search"
               class="flex-1 text-sm outline-none bg-transparent text-gray-700 placeholder-gray-400"
             />
-            <button class="text-gray-500 hover:text-blue-500 transition-colors ml-2">
+            <button @click="handleSearch" class="text-gray-500 hover:text-blue-500 transition-colors ml-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
               </svg>
@@ -59,7 +60,7 @@
                 <router-link to="/profile" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                   👤 Profil Saya
                 </router-link>
-                <router-link to="/orders" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <router-link to="/orders" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" v-if="userRole === 'buyer'">
                   📦 Pesanan Saya
                 </router-link>
                 <div v-if="userRole === 'seller'" class="border-t border-gray-100 my-1"></div>
@@ -170,6 +171,12 @@ const cartCount = ref(0);
 const isLoggedIn = ref(false);
 const userName = ref('');
 const userRole = ref('');
+
+const handleSearch = () => {
+  if (searchQuery.value.trim()) {
+    router.push({ path: '/category/all', query: { q: searchQuery.value } });
+  }
+};
 
 // ===================== FETCH CART COUNT =====================
 const fetchCartCount = async () => {

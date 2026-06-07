@@ -195,7 +195,9 @@ const fetchInitialData = async () => {
     form.value.description = prodData.description || '';
     form.value.categoryId = prodData.category_id || (prodData.category ? prodData.category.id : '');
     
-    if (prodData.images && prodData.images.length > 0) {
+    if (prodData.image_url || prodData.imageUrl) {
+      existingProductImage.value = prodData.image_url || prodData.imageUrl;
+    } else if (prodData.images && prodData.images.length > 0) {
       existingProductImage.value = prodData.images[0].image_url || prodData.images[0].imageUrl;
     }
 
