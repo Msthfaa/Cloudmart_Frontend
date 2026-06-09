@@ -104,8 +104,14 @@ router.beforeEach((to, from, next) => {
     }
   }
   // Buyer routes — butuh login
-  else if (to.matched.some(record => record.meta.requiresBuyer) && !token) {
-    next('/login');
+  else if (to.matched.some(record => record.meta.requiresBuyer)) {
+    if (!token) {
+      next('/login');
+    } else if (userRole === 'seller' || userRole === 'SELLER') {
+      next('/admin/dashboard');
+    } else {
+      next();
+    }
   }
   // Sudah login, coba akses halaman login admin → lempar ke dashboard
   else if (to.name === 'AdminLogin' && token) {

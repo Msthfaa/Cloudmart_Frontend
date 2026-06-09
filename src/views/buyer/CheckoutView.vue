@@ -256,8 +256,8 @@
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600">Pengiriman + Biaya Layanan</span>
-          <span :class="currentStep >= 2 ? 'font-semibold text-gray-800' : 'text-gray-400 italic text-xs'">
-            {{ currentStep >= 2 ? (estimateData ? formatRupiah(estimateData.shipping_fee) : selectedShippingPrice) : 'Dihitung pada tahap berikutnya' }}
+          <span :class="(currentStep >= 2 || estimateData) ? 'font-semibold text-gray-800' : 'text-gray-400 italic text-xs'">
+            {{ (currentStep >= 2 || estimateData) ? (estimateData ? formatRupiah(estimateData.shipping_fee) : selectedShippingPrice) : 'Dihitung pada tahap berikutnya' }}
           </span>
         </div>
         <div v-if="estimateData && estimateData.discount > 0" class="flex items-center justify-between text-sm text-green-600">
@@ -440,9 +440,7 @@ const applyVoucher = async () => {
     await voucherService.claimVoucher(code);
     voucherApplied.value = true;
     voucherCode.value = code; // Update back the formatted value
-    if (currentStep.value >= 2) {
-      await fetchEstimate();
-    }
+    await fetchEstimate();
   } catch (error) {
     voucherApplied.value = false;
   }
@@ -472,23 +470,36 @@ const placeOrder = async () => {
     }
     const addressString = `${addr.recipient}, ${addr.phone}, ${addr.address}, ${addr.city}, ${addr.state}, ${addr.country} ${addr.postal_code}`.trim();
 
-    const order = await orderService.checkout(addressString, form.value.shippingMethod, voucherCode.value, cartItemIDs.value);
+    let order;
+    try {
+      order = await orderService.checkout(addressString, form.value.shippingMethod, voucherCode.value, cartItemIDs.value);
+    } catch (error) {
+      // API error shown by service, just return
+      placingOrder.value = false;
+      return;
+    }
 
     if (form.value.paymentMethod === 'midtrans' && order && order.id) {
-      const paymentInfo = await orderService.initiatePayment(order.id);
-      
-      if (paymentInfo.payment_url) {
-        window.location.href = paymentInfo.payment_url;
-        return;
-      }
+      try {
+        const paymentInfo = await orderService.initiatePayment(order.id);
+        
+        if (paymentInfo.payment_url) {
+          window.location.href = paymentInfo.payment_url;
+          return;
+        }
 
-      if (paymentInfo.snap_token && window.snap) {
-        window.snap.pay(paymentInfo.snap_token, {
-          onSuccess: () => router.push({ path: '/payment-success', query: { order_id: order.id } }),
-          onPending: () => router.push('/orders'),
-          onError: () => showToastError('Pembayaran gagal.'),
-          onClose: () => router.push('/orders'),
-        });
+        if (paymentInfo.snap_token && window.snap) {
+          window.snap.pay(paymentInfo.snap_token, {
+            onSuccess: () => router.push({ path: '/payment-success', query: { order_id: order.id } }),
+            onPending: () => router.push('/orders'),
+            onError: () => { showToastError('Pembayaran gagal.'); router.push('/orders'); },
+            onClose: () => router.push('/orders'),
+          });
+          return;
+        }
+      } catch (error) {
+        showToastError('Gagal menginisiasi pembayaran. Silakan bayar melalui menu Pesanan.');
+        router.push('/orders');
         return;
       }
     }
@@ -496,7 +507,7 @@ const placeOrder = async () => {
     // Default: redirect ke payment success
     router.push({ path: '/payment-success', query: { order_id: order.id } });
   } catch (error) {
-    // Error ditampilkan oleh service
+    // Other errors
   } finally {
     placingOrder.value = false;
   }

@@ -201,7 +201,7 @@
           </div>
 
           <!-- Action Buttons -->
-          <div class="flex gap-3 mb-8">
+          <div class="flex gap-3 mb-8" v-if="userRole !== 'seller' && userRole !== 'SELLER'">
             <button
               @click="addToCart"
               class="flex-1 flex items-center justify-center gap-2.5 py-3.5 border-2 border-gray-900 text-gray-900 font-black text-sm rounded-2xl hover:bg-gray-900 hover:text-white transition-all active:scale-95"
@@ -420,6 +420,7 @@ const inWishlist = ref(false);
 const activeTab = ref('Deskripsi');
 const showToast = ref(false);
 const addingToCart = ref(false);
+const userRole = ref(localStorage.getItem('user_role') || '');
 let toastTimer;
 
 // ===================== PRODUCT DATA =====================

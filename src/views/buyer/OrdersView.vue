@@ -351,9 +351,25 @@ const filteredOrders = computed(() => {
 });
 
 // ===================== ACTIONS =====================
-const payNow = (order) => {
+const payNow = async (order) => {
   if (order.paymentUrl) {
     window.location.href = order.paymentUrl;
+  } else {
+    try {
+      const paymentInfo = await orderService.initiatePayment(order.id);
+      if (paymentInfo.payment_url) {
+        window.location.href = paymentInfo.payment_url;
+      } else if (paymentInfo.snap_token && window.snap) {
+        window.snap.pay(paymentInfo.snap_token, {
+          onSuccess: () => { window.location.reload(); },
+          onPending: () => { window.location.reload(); },
+          onError: () => showToastError('Pembayaran gagal.'),
+          onClose: () => { window.location.reload(); },
+        });
+      }
+    } catch (error) {
+      showToastError('Gagal menginisiasi pembayaran.');
+    }
   }
 };
 
