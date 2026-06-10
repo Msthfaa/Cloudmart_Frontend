@@ -115,11 +115,11 @@
                 v-for="i in 5"
                 :key="i"
                 class="text-base"
-                :class="i <= Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-200'"
+                :class="i <= Math.floor(ratingStats.average) ? 'text-yellow-400' : 'text-gray-200'"
               >★</span>
             </div>
-            <span class="text-sm font-bold text-gray-700">{{ product.rating }}</span>
-            <span class="text-sm text-gray-400">({{ product.reviewCount }} ulasan)</span>
+            <span class="text-sm font-bold text-gray-700">{{ ratingStats.average }}</span>
+            <span class="text-sm text-gray-400">({{ ratingStats.count }} ulasan)</span>
             <span class="text-sm text-gray-400">|</span>
             <span class="text-sm text-green-600 font-semibold">{{ product.sold }} terjual</span>
           </div>
@@ -241,7 +241,7 @@
         <!-- Tab Nav -->
         <div class="flex items-center gap-8 border-b border-gray-200 mb-7">
           <button
-            v-for="tab in ['Deskripsi', 'Spesifikasi', `Ulasan (${product.reviewCount})`]"
+            v-for="tab in ['Deskripsi', 'Spesifikasi', `Ulasan (${ratingStats.count})`]"
             :key="tab"
             @click="activeTab = tab.split(' ')[0]"
             class="pb-3 text-sm font-bold transition-all border-b-2 -mb-px"
@@ -273,20 +273,20 @@
           <!-- Summary -->
           <div class="flex items-center gap-8 bg-gray-50 rounded-2xl p-6 mb-6">
             <div class="text-center">
-              <p class="text-5xl font-black text-gray-900">{{ product.rating }}</p>
+              <p class="text-5xl font-black text-gray-900">{{ ratingStats.average }}</p>
               <div class="flex justify-center gap-0.5 my-1">
-                <span v-for="i in 5" :key="i" class="text-yellow-400 text-lg">{{ i <= Math.floor(product.rating) ? '★' : '☆' }}</span>
+                <span v-for="i in 5" :key="i" class="text-yellow-400 text-lg">{{ i <= Math.floor(ratingStats.average) ? '★' : '☆' }}</span>
               </div>
-              <p class="text-xs text-gray-400">{{ product.reviewCount }} ulasan</p>
+              <p class="text-xs text-gray-400">{{ ratingStats.count }} ulasan</p>
             </div>
             <div class="flex-1">
               <div v-for="star in [5,4,3,2,1]" :key="star" class="flex items-center gap-3 mb-1.5">
                 <span class="text-xs text-gray-500 w-4 shrink-0">{{ star }}</span>
                 <span class="text-yellow-400 text-xs">★</span>
                 <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div class="h-full bg-yellow-400 rounded-full" :style="{ width: `${ratingBars[star]}%` }"></div>
+                  <div class="h-full bg-yellow-400 rounded-full" :style="{ width: `${ratingStats.bars[star]}%` }"></div>
                 </div>
-                <span class="text-xs text-gray-400 w-6 shrink-0">{{ ratingBars[star] }}%</span>
+                <span class="text-xs text-gray-400 w-6 shrink-0">{{ ratingStats.bars[star] }}%</span>
               </div>
             </div>
           </div>
@@ -312,7 +312,7 @@
                     <p class="text-sm font-bold text-gray-800">{{ review.user?.name || 'User' }}</p>
                     <p class="text-[11px] text-gray-400">
                       {{ new Date(review.created_at).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) }} 
-                      · Varian: {{ review.order_item?.variant_name || '-' }}
+                      · Varian: {{ review.order_item?.variant_details || '-' }}
                     </p>
                   </div>
                 </div>
@@ -487,7 +487,7 @@ const fetchProduct = async () => {
       brand: data.store?.name || data.brand || '',
       category: data.category?.name || '',
       categorySlug: data.category?.slug || 'men',
-      rating: data.rating || 4.5,
+      rating: data.rating || 0,
       reviewCount: data.review_count || 0,
       sold: data.sold || '0',
       price: formatRupiah(minPrice),
@@ -555,9 +555,6 @@ const selectedVariant = computed(() => {
   ) || product.value.variants[0] || null;
 });
 
-// ===================== RATING BAR =====================
-const ratingBars = { 5: 65, 4: 22, 3: 8, 2: 3, 1: 2 };
-
 // ===================== REVIEWS =====================
 const reviews = ref([]);
 
@@ -569,6 +566,38 @@ const fetchReviews = async () => {
     // Don't show toast error for reviews, just fail silently to not annoy user
   }
 };
+
+const ratingStats = computed(() => {
+  if (!reviews.value || reviews.value.length === 0) {
+    return {
+      average: product.value.rating || 0,
+      count: product.value.reviewCount || 0,
+      bars: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+    };
+  }
+
+  const count = reviews.value.length;
+  let sum = 0;
+  const barsCount = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
+  reviews.value.forEach(r => {
+    sum += r.rating;
+    if (barsCount[r.rating] !== undefined) {
+      barsCount[r.rating]++;
+    }
+  });
+
+  const average = (sum / count).toFixed(1);
+  const bars = {
+    5: Math.round((barsCount[5] / count) * 100),
+    4: Math.round((barsCount[4] / count) * 100),
+    3: Math.round((barsCount[3] / count) * 100),
+    2: Math.round((barsCount[2] / count) * 100),
+    1: Math.round((barsCount[1] / count) * 100),
+  };
+
+  return { average, count, bars };
+});
 
 // ===================== RELATED PRODUCTS =====================
 const relatedProducts = ref([]);

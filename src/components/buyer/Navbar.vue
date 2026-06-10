@@ -54,7 +54,7 @@
               <template v-if="isLoggedIn">
                 <div class="px-4 py-2.5">
                   <p class="text-sm font-bold text-gray-800 truncate">{{ userName }}</p>
-                  <p class="text-[11px] text-gray-400">Buyer</p>
+                  <p class="text-[11px] text-gray-400 capitalize">{{ userRole === 'seller' ? 'Seller' : 'Buyer' }}</p>
                 </div>
                 <div class="border-t border-gray-100 my-1"></div>
                 <router-link to="/profile" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
@@ -64,7 +64,7 @@
                   📦 Pesanan Saya
                 </router-link>
                 <div v-if="userRole === 'seller'" class="border-t border-gray-100 my-1"></div>
-                <router-link v-if="userRole === 'seller'" to="/admin" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <router-link v-if="userRole === 'seller'" to="/admin/dashboard" class="block px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                   🏬 Dashboard Penjual
                 </router-link>
                 <div class="border-t border-gray-100 my-1"></div>

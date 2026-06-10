@@ -45,6 +45,7 @@ const routes = [
       { path: 'payment-success', name: 'PaymentSuccess', component: PaymentSuccess },
       { path: 'cart',            name: 'Cart',           component: CartView,       meta: { requiresBuyer: true } },
       { path: 'orders',          name: 'Orders',         component: OrdersView,     meta: { requiresBuyer: true } },
+      { path: 'orders/:id',      name: 'OrderDetail',    component: () => import('../views/buyer/OrderDetail.vue'), meta: { requiresBuyer: true } },
       { path: 'profile',         name: 'Profile',        component: ProfileView,    meta: { requiresBuyer: true } },
     ],
   },

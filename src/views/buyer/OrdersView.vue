@@ -264,6 +264,7 @@ const statusColors = {
   settlement: 'bg-green-50 text-green-600 border border-green-100',
   paid: 'bg-green-50 text-green-600 border border-green-100',
   cancelled: 'bg-gray-100 text-gray-500 border border-gray-200',
+  cancel: 'bg-gray-100 text-gray-500 border border-gray-200',
   expire: 'bg-gray-100 text-gray-500 border border-gray-200',
   deny: 'bg-red-50 text-red-600 border border-red-100',
 };
@@ -279,6 +280,7 @@ const statusLabelMap = {
   paid: 'Selesai',
   completed: 'Selesai',
   cancelled: 'Dibatalkan',
+  cancel: 'Dibatalkan',
   expire: 'Kedaluwarsa',
   deny: 'Ditolak',
 };
@@ -296,6 +298,7 @@ const mapStatus = (paymentStatus) => {
     paid: 'completed',
     completed: 'completed',
     cancelled: 'cancelled',
+    cancel: 'cancelled',
     expire: 'cancelled',
     deny: 'cancelled',
   };

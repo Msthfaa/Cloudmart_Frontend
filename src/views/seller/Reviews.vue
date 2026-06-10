@@ -33,8 +33,8 @@
             </tr>
             <tr v-else v-for="review in reviews" :key="review.id" class="hover:bg-blue-50/20 transition-colors">
               <td class="p-5 align-top">
-                <p class="font-bold text-gray-800 text-sm line-clamp-2">{{ review.order_item?.name || 'Produk' }}</p>
-                <p class="text-[11px] text-gray-500 mt-0.5 mb-2">Varian: {{ review.order_item?.variant_name || '-' }}</p>
+                <p class="font-bold text-gray-800 text-sm line-clamp-2">{{ review.order_item?.variant?.product?.name || 'Produk' }}</p>
+                <p class="text-[11px] text-gray-500 mt-0.5 mb-2">Varian: {{ review.order_item?.variant_details || '-' }}</p>
                 <div class="flex items-center gap-2 mt-2">
                   <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-[10px] font-black uppercase">
                     {{ review.user?.name ? review.user.name[0] : 'U' }}

@@ -476,7 +476,11 @@ const grandTotal = computed(() => {
 // ===================== CHECKOUT =====================
 const goToCheckout = () => {
   if (selectedItems.value.length === 0) return;
-  router.push({ path: '/checkout', query: { items: selectedItems.value.join(',') } });
+  const query = { items: selectedItems.value.join(',') };
+  if (voucherApplied.value && voucherCode.value) {
+    query.voucher = voucherCode.value;
+  }
+  router.push({ path: '/checkout', query });
 };
 
 // ===================== ADD TO CART (recommended) =====================

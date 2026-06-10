@@ -256,8 +256,8 @@
         </div>
         <div class="flex items-center justify-between text-sm">
           <span class="text-gray-600">Pengiriman + Biaya Layanan</span>
-          <span :class="(currentStep >= 2 || estimateData) ? 'font-semibold text-gray-800' : 'text-gray-400 italic text-xs'">
-            {{ (currentStep >= 2 || estimateData) ? (estimateData ? formatRupiah(estimateData.shipping_fee) : selectedShippingPrice) : 'Dihitung pada tahap berikutnya' }}
+          <span :class="(currentStep >= 2) ? 'font-semibold text-gray-800' : 'text-gray-400 italic text-xs'">
+            {{ (currentStep >= 2) ? (estimateData ? formatRupiah(estimateData.shipping_fee) : selectedShippingPrice) : 'Dihitung pada tahap berikutnya' }}
           </span>
         </div>
         <div v-if="estimateData && estimateData.discount > 0" class="flex items-center justify-between text-sm text-green-600">
@@ -387,6 +387,10 @@ const fetchData = async () => {
     showToastError('Gagal memuat data checkout.');
   } finally {
     loading.value = false;
+    if (route.query.voucher) {
+      voucherCode.value = route.query.voucher;
+      await applyVoucher();
+    }
   }
 };
 
@@ -424,9 +428,9 @@ const totalAmount = computed(() => {
 
 // ===================== ESTIMATE ORDER =====================
 const fetchEstimate = async () => {
-  if (!form.value.shippingMethod) return;
+  const logisticID = currentStep.value >= 2 ? (form.value.shippingMethod || 0) : 0;
   try {
-    const res = await orderService.estimateOrder(form.value.shippingMethod, voucherApplied.value ? voucherCode.value : '', cartItemIDs.value);
+    const res = await orderService.estimateOrder(logisticID, voucherApplied.value ? voucherCode.value : '', cartItemIDs.value);
     estimateData.value = res;
   } catch {
     estimateData.value = null;
