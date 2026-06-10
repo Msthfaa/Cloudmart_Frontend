@@ -95,13 +95,15 @@ const mapShippingStatus = (status) => {
 const orders = computed(() => {
   let filtered = ordersData.value;
   if (activeTab.value !== 'Semua Pesanan') {
-    if (activeTab.value === 'Baru') filtered = filtered.filter(o => o.shipping_status === 'pending' || !o.shipping_status);
-    if (activeTab.value === 'Diproses') filtered = filtered.filter(o => o.shipping_status === 'processing');
+    if (activeTab.value === 'Baru') filtered = filtered.filter(o => (o.shipping_status === 'pending' || !o.shipping_status) && o.payment_status !== 'cancel' && o.payment_status !== 'cancelled');
+    if (activeTab.value === 'Diproses') filtered = filtered.filter(o => o.shipping_status === 'processing' && o.payment_status !== 'cancel' && o.payment_status !== 'cancelled');
     if (activeTab.value === 'Selesai') filtered = filtered.filter(o => o.shipping_status === 'delivered');
+    if (activeTab.value === 'Dibatalkan') filtered = filtered.filter(o => o.payment_status === 'cancel' || o.payment_status === 'cancelled');
   }
   
   return filtered.map(o => {
     const d = new Date(o.created_at);
+    const isCanceled = o.payment_status === 'cancel' || o.payment_status === 'cancelled';
     return {
       id: o.id,
       orderId: `#ORD-${o.id}`,
@@ -110,9 +112,9 @@ const orders = computed(() => {
       customer: o.user && o.user.name ? o.user.name : `User ID: ${o.user_id}`,
       total: 'Rp ' + Number(o.grand_total).toLocaleString('id-ID'),
       paymentStatusRaw: o.payment_status,
-      paymentStatus: o.payment_status === 'settlement' || o.payment_status === 'paid' ? 'Dibayar' : 'Menunggu',
+      paymentStatus: o.payment_status === 'settlement' || o.payment_status === 'paid' ? 'Dibayar' : isCanceled ? 'Dibatalkan' : 'Menunggu',
       shippingStatusRaw: o.shipping_status,
-      fulfillment: mapShippingStatus(o.shipping_status)
+      fulfillment: isCanceled ? 'Dibatalkan' : mapShippingStatus(o.shipping_status)
     };
   });
 });
